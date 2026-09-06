@@ -1,0 +1,87 @@
+---
+
+- name: Syncthing - config
+  hosts: localhost
+  connection: local
+  tasks:
+    # /home/linuxbrew/.linuxbrew/bin/syncthing
+    - name: Syncthing - config - check if syncthing is available
+      ansible.builtin.command: command -v syncthing
+      register: syncthing_available
+      ignore_errors: true
+      changed_when: false
+
+    - name: Syncthing - config - fail if syncthing is not available
+      when: syncthing_available.rc != 0
+      ansible.builtin.fail:
+        msg: "Syncthing is not installed or not in PATH. Please install it via Homebrew first. Or try opening a new shell session and start again."
+
+    - name: Syncthing - config - set syncthing path
+      when: syncthing_available.rc == 0
+      ansible.builtin.set_fact:
+        syncthing_path: "{{ syncthing_available.stdout }}"
+      changed_when: false
+
+    - name: Syncthing - config - make sure folder for systemd user files exists - env_user
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rwx,g=rx,o=rx
+        state: directory
+
+    # - <https://docs.syncthing.net/users/autostart.html#how-to-set-up-a-user-service>
+    # - <https://github.com/syncthing/syncthing/blob/main/etc/linux-systemd/user/syncthing.service>
+    - name: Syncthing - config - create service unit file - env_user
+      when: syncthing_available.rc == 0
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/syncthing.service"
+        create: true
+        marker: "# {mark} - Syncthing service unit file (user) - ANSIBLE MANAGED BLOCK"
+        block: |
+          [Unit]
+          Description=Syncthing - Open Source Continuous File Synchronization
+          Documentation=man:syncthing(1)
+          StartLimitIntervalSec=60
+          StartLimitBurst=4
+
+          [Service]
+          Environment="STLOGFORMATTIMESTAMP="
+          Environment="STLOGFORMATLEVELSTRING=false"
+          Environment="STLOGFORMATLEVELSYSLOG=true"
+          ExecStart={{ syncthing_path }} serve --no-browser --no-restart
+          Restart=on-failure
+          RestartSec=1
+          SuccessExitStatus=3 4
+          RestartForceExitStatus=3 4
+
+          # Hardening
+          SystemCallArchitectures=native
+          MemoryDenyWriteExecute=true
+          NoNewPrivileges=true
+
+          # Elevated permissions to sync ownership (disabled by default),
+          # see https://docs.syncthing.net/advanced/folder-sync-ownership
+          #AmbientCapabilities=CAP_CHOWN CAP_FOWNER
+
+          [Install]
+          WantedBy=default.target
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rwx,g=rwx,o=rwx
+        state: present
+
+    - name: Syncthing - config - enable syncthing service - env_user
+      when: syncthing_available.rc == 0
+      ansible.builtin.systemd_service:
+        name: syncthing
+        enabled: true
+        scope: user
+
+    # Alternative if ansible.builtin.systemd_service does not work:
+    # - name: Syncthing - config - enable syncthing service - env_user
+    #   when: syncthing_available.rc == 0
+    #   ansible.builtin.command: systemctl --user enable syncthing
+    #   # become_user: "{{ ansible_facts['env']['USER'] }}"
+    #   # become: true
+    #   changed_when: false

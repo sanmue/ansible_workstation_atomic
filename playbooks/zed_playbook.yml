@@ -1,0 +1,42 @@
+---
+
+- name: Zed editor
+  hosts: localhost
+  connection: local
+  tasks:
+    # - name: Zed editor - install required packagesv via brew
+    #   community.general.homebrew:
+    #     name:
+    #       # - curl # already integrated # or 'wget'
+    #       # - wget # already integrated
+    #       # - tar # already integrated
+
+    # after installation Zed updates itself automatically by default
+
+    # /usr/bin/zed exists, but not zed editor
+    # - name: Zed editor - check if already installed
+    #   ansible.builtin.command: command -v zed
+    #   ignore_errors: true
+    #   register: zed_already_installed
+    #   changed_when: false
+
+    - name: Zed editor - download install script
+      # when: zed_already_installed.rc != 0
+      ansible.builtin.get_url:
+        url: https://zed.dev/install.sh
+        dest: /tmp/zed-install.sh
+        mode: '0755'
+
+    # Downloads a tarball from https://zed.dev/releases and unpacks it into ~/.local/
+    # links binary to "$HOME/.local/bin/zed"
+    # copies .desktop file to "$HOME/.local/share/applications/${appid}.desktop"
+    - name: Zed editor - execute install script
+      # when: zed_already_installed.rc != 0
+      ansible.builtin.command: /tmp/zed-install.sh
+      args:
+        creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/zed"
+      register: zed_install
+      changed_when:
+        - "'Zed has been installed' in zed_install.stdout"
+        - zed_install.rc == 0
+      failed_when: zed_install.rc != 0

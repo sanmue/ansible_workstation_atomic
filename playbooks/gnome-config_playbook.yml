@@ -1,0 +1,195 @@
+---
+
+- name: Gnome config
+  hosts: localhost
+  connection: local
+  tasks:
+    # Gnome Settings: System -> Region & Language -> Your Account -> Formats
+    - name: Gnome config - dconf - system locale region
+      community.general.dconf:
+        key: "/system/locale/region"
+        value: "'de_DE.UTF-8'"
+        state: present
+
+    # during install only one keyboard layout could be set ('de' in my case)
+    # but since i set system language to us english, it is available too
+    - name: Gnome config - dconf - available keyboard layouts
+      community.general.dconf:
+        key: "/org/gnome/desktop/input-sources/sources"
+        value: "[('xkb', 'de'), ('xkb', 'us')]"
+        state: present
+
+    - name: Gnome config - Create a directory for desktop-wallpaper in local user-folder
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/share/backgrounds"
+        state: directory
+        mode: "0777"
+
+    - name: Gnome config - Copy desktop-wallpaper file to local user-folder
+      ansible.builtin.copy:
+        src: "files/brad-huchteman-stone-mountain.jpg"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local/share/backgrounds/brad-huchteman-stone-mountain.jpg"
+        remote_src: true
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rw,g=rw,o=rw
+
+    - name: Gnome config - dconf - background
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-uri"
+        value: "'file://{{ ansible_facts['env']['HOME'] }}/.local/share/backgrounds/brad-huchteman-stone-mountain.jpg'"
+        state: present
+
+    - name: Gnome config - dconf - background dark
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-uri-dark"
+        value: "'file://{{ ansible_facts['env']['HOME'] }}/.local/share/backgrounds/brad-huchteman-stone-mountain.jpg'"
+        state: present
+
+    - name: Gnome config - dconf - screensaver background
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/icon-theme"
+        value: "'file://{{ ansible_facts['env']['HOME'] }}/.local/share/backgrounds/brad-huchteman-stone-mountain.jpg'"
+        state: present
+
+    # Power Saving - Automatic Screen Blank
+    - name: Gnome config - dconf - idle-delay
+      community.general.dconf:
+        key: "/org/gnome/desktop/session/idle-delay"
+        value: "uint32 900"
+        state: present
+
+    # Power Saving - Automatic Suspend
+    - name: Gnome config - dconf - sleep-inactive-ac-type
+      community.general.dconf:
+        key: "/org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type"
+        value: "'suspend'"
+        state: present
+
+    # Power Saving - Automatic Suspend Delay
+    - name: Gnome config - dconf - sleep-inactive-ac-timeout
+      community.general.dconf:
+        key: "/org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-timeout"
+        value: "7200"
+        state: present
+
+    - name: Gnome config - dconf - Weather - locations
+      community.general.dconf:
+        key: "/org/gnome/Weather/locations"
+        value: "[<(uint32 2, <('Saarbrücken', 'EDDR', true, [(0.85899288600764001, 0.12420927091802728)], [(0.85928376258077743, 0.12217304763960307)])>)>]"
+        state: present
+
+    # manual config: via Gnome tweaks
+    - name: Gnome config - dconf - icon-theme
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/icon-theme"
+        value: "'Papirus-Dark'"
+        state: present
+
+    # manual config: via Gnome tweaks # theme for Legacy Applications
+    - name: Gnome config - dconf - gtk-theme
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/gtk-theme"
+        value: "'adw-gtk3-dark'"
+        state: present
+
+    - name: Gnome config - dconf - color-scheme
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/color-scheme"
+        value: "'prefer-dark'"
+        state: present
+
+    # window - show minimize, maximize and close button; right side
+    - name: Gnome config - dconf - wm - button-layout
+      community.general.dconf:
+        key: "/org/gnome/desktop/wm/preferences/button-layout"
+        value: "':minimize,maximize,close'"
+        state: present
+
+    # # when true, modal dialog windows are attached to their parent window, and cannot be moved
+    # - name: Gnome config - dconf - mutter - attach-modal-dialogs
+    #   community.general.dconf:
+    #     key: "/org/gnome/mutter/attach-modal-dialogs"
+    #     value: "false"
+    #     state: present
+    #   when:
+    #     - env_desktop in ["gnome"]
+
+    # nicht installierte Apps werden einfach nicht angezeigt (nach Installation schon), d.h. dass Angaben hier drin sind ist kein Problem
+    # gedit ('org.gnome.gedit.desktop') replaced with Gnome TextEditor
+    - name: Gnome Desktop - Preferences - Adding favorite apps to dock (Gnome, all)
+      community.general.dconf:
+        key: "/org/gnome/shell/favorite-apps"
+        value: "{{ favorite_apps | to_json }}"
+        state: present
+      vars:
+        favorite_apps:
+          - com.belmoussaoui.Authenticator.desktop
+          - org.keepassxc.KeePassXC.desktop
+          - one.ablaze.floorp.desktop
+          - org.mozilla.firefox.desktop
+          - firefox.desktop
+          - com.brave.Browser.desktop
+          - com.microsoft.Edge.desktop
+          - org.chromium.Chromium.desktop
+          - org.gnome.Epiphany.desktop
+          - org.mozilla.Thunderbird.desktop
+          - com.mitchellh.ghostty.desktop
+          - org.gnome.Ptyxis.desktop
+          - nemo.desktop
+          - org.gnome.Nautilus.desktop
+          - org.kde.dolphin.desktop
+          - org.gnome.TextEditor.desktop
+          - net.cozic.joplin_desktop.desktop
+          - com.visualstudio.code.desktop
+          - code.desktop
+          - dev.zed.Zed.desktop
+          - net.ankiweb.Anki.desktop
+          - me.iepure.devtoolbox.desktop
+          - com.ranfdev.DistroShelf.desktop
+          - io.podman_desktop.PodmanDesktop.desktop
+          - virt-manager.desktop
+          - org.signal.Signal.desktop
+          - org.gnome.Rhythmbox3.desktop
+          - de.haeckerfelix.Shortwave.desktop
+
+    # htop: uses F10 (and q) for Exit
+    - name: Gnome config - dconf - keyboard shortcut - disable toggle maximize state (F10)
+      community.general.dconf:
+        key: "/org/gnome/desktop/wm/keybindings/toggle-maximized"
+        value: "@as []"
+        state: present
+
+    - name: Gnome Desktop - Preferences - custom-keybindings (Gnome, all)
+      community.general.dconf:
+        key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
+        value: "{{ custom_keybindings | to_json }}"
+        state: present
+      vars:
+        custom_keybindings:
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/
+          - /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/
+
+    - name: Gnome config - dconf - keyboard shortcut - vicinae toggle - name
+      community.general.dconf:
+        key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/name"
+        value: "'Vicinae'"
+        state: present
+
+    - name: Gnome config - dconf - keyboard shortcut - vicinae toggle - command
+      community.general.dconf:
+        key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/command"
+        value: "'vicinae toggle'"
+        state: present
+
+    - name: Gnome config - dconf - keyboard shortcut - vicinae toggle - binding (CTRL+Space)
+      community.general.dconf:
+        key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/binding"
+        value: "'<Control><Alt>space'"
+        state: present

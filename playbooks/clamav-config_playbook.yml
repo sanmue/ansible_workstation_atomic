@@ -1,0 +1,370 @@
+---
+
+# alias for scan of $HOME: see ~/.bashrc and ~/.zshrc
+
+- name: ClamAV config
+  hosts: localhost
+  connection: local
+  tasks:
+
+    # ###########
+    # directories
+    # ###########
+
+    - name: ClamAV config - Create directory - linuxbrew-var-log
+      ansible.builtin.file:
+        path: /var/home/linuxbrew/.linuxbrew/var/log # should already exist
+        state: directory
+        mode: '0755'
+
+    - name: ClamAV config - Create directory - linuxbrew-var-run-clamav
+      ansible.builtin.file:
+        path: /var/home/linuxbrew/.linuxbrew/var/run/clamav
+        state: directory
+        mode: '0755'
+
+    - name: ClamAV config - Create directory - quarantine (env_user)
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.clamav/quarantine"
+        state: directory
+        mode: '0755'
+
+    - name: ClamAV config - Create directory - config-systemd (env_user)
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user" # should already exist
+        state: directory
+        mode: '0755'
+
+    # ###############################
+    # Service user and group 'clamav'
+    # ###############################
+
+    # inserts 'clamav' in '/etc/group' # '/etc/group' on Atomic Desktop not persistent
+    # even if group already exists, return value (including gid) will be available
+    - name: ClamAV - Create group clamav (tmp)
+      become: true
+      ansible.builtin.group:
+        name: clamav
+        state: present
+      register: group_clamav_result
+
+    # persistent for groups (Fedora Atomic): '/usr/lib/group' # '/usr/lib/group' and '/usr/lib/sysusers.d/' are write protected
+    # make group persistant via new path/file: '/etc/sysusers.d/clamav.conf'
+    - name: ClamAV - Create group clamav - create directory '/etc/sysusers.d'
+      become: true
+      ansible.builtin.file:
+        path: /etc/sysusers.d
+        state: directory
+        mode: '0755'
+
+    - name: ClamAV - Create group clamav - via entry in '/etc/sysusers.d/clamav.conf'
+      become: true
+      ansible.builtin.blockinfile:
+        path: /etc/sysusers.d/clamav.conf
+        create: true
+        mode: '0644'
+        block: |
+          g clamav {{ group_clamav_result.gid }}
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - group clamav"
+
+    # eigentlich schon oben bei 'ClamAV - Create group clamav (tmp)'
+    - name: ClamAV - Create group clamav - immediately via cmd 'systemd-sysusers'
+      become: true
+      ansible.builtin.command: systemd-sysusers
+      register: group_clamav_systemdsysusers
+      # changed_when: group_clamav_systemdsysusers.rc != 0
+      # changed_when: false  # Immer rc=0, auch bei Änderungen
+      changed_when: "'Creating group' in group_clamav_systemdsysusers.stdout"
+
+    - name: ClamAV - Create service user clamav - via entry in '/etc/sysusers.d/clamav.conf'
+      become: true
+      ansible.builtin.blockinfile:
+        path: /etc/sysusers.d/clamav.conf
+        create: true
+        mode: '0644'
+        block: |
+          u clamav {{ group_clamav_result.gid }} 'ClamAV Service User' / /bin/false
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - user clamav"
+
+    - name: ClamAV - Create service user clamav - immediately via cmd 'systemd-sysusers'
+      become: true
+      ansible.builtin.command: systemd-sysusers
+      register: user_clamav_systemdsysusers
+      # changed_when: user_clamav_systemdsysusers.rc != 0
+      # changed_when: false  # Immer rc=0, auch bei Änderungen
+      changed_when: "'Creating user' in user_clamav_systemdsysusers.stdout"
+
+    - name: ClamAV - add env_user to clamav group
+      become: true
+      ansible.builtin.user:
+        name: "{{ ansible_facts['env']['USER'] }}"
+        groups: clamav
+        append: true
+
+    # ##########
+    # clamd.conf
+    # ##########
+
+    - name: ClamAV config - clamd - config file - create from example file
+      ansible.builtin.copy:
+        src: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf.sample
+        dest: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        force: false # the file will only be transferred if the destination does not exist
+        mode: '0644'
+
+    - name: ClamAV config - clamd - config file - uncomment 'Example' line
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^(# )?Example$' # Idempotent: funktioniert bei mehrfacher Ausführung, "Example" und "# Example"
+        line: '# Example'
+
+    - name: ClamAV config - clamd - enable logging or set logfile
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        # Idempotent: funktioniert bei mehrfacher Ausführung, da Regex beides ("#LogFile..." (alt) und "LogFile..." (neu)) abdeckt:
+        regexp: '^#?LogFile (/tmp/clamd\.log|/var/home/linuxbrew/.linuxbrew/var/log/clamd\.log)$'
+        line: 'LogFile /var/home/linuxbrew/.linuxbrew/var/log/clamd.log'
+
+    - name: ClamAV config - clamd - LogFileMaxSize
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?LogFileMaxSize 2M$'
+        line: 'LogFileMaxSize 2M'
+
+    - name: ClamAV config - clamd - LogTime
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?LogTime yes$'
+        line: 'LogTime yes'
+
+    - name: ClamAV config - clamd - LogSyslog
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?LogSyslog yes$'
+        line: 'LogSyslog yes'
+
+    - name: ClamAV config - clamd - LogFacility
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?LogFacility (LOG_MAIL|LOG_LOCAL6)$'
+        line: 'LogFacility LOG_LOCAL6'
+
+    - name: ClamAV config - clamd - LogRotate
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?LogRotate yes$'
+        line: 'LogRotate yes'
+
+    - name: ClamAV config - clamd - PidFile
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?PidFile (/run/clamav/clamd.pid|/var/home/linuxbrew/.linuxbrew/var/run/clamav/clamd.pid)$'
+        line: 'PidFile /var/home/linuxbrew/.linuxbrew/var/run/clamav/clamd.pid'
+
+    - name: ClamAV config - clamd - DatabaseDirectory
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?DatabaseDirectory (/var/lib/clamav|/var/home/linuxbrew/.linuxbrew/var/lib/clamav)$'
+        line: 'DatabaseDirectory /var/home/linuxbrew/.linuxbrew/var/lib/clamav'
+
+    - name: ClamAV config - clamd - LocalSocket
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?LocalSocket (/tmp/clamd.sock|/var/home/linuxbrew/.linuxbrew/var/run/clamav/clamd.ctl)$'
+        line: 'LocalSocket /var/home/linuxbrew/.linuxbrew/var/run/clamav/clamd.ctl'
+
+    - name: ClamAV config - clamd - FixStaleSocket
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?FixStaleSocket (no|yes)$'
+        line: 'FixStaleSocket yes'
+
+    - name: ClamAV config - clamd - MaxThreads (4)
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?MaxThreads (20|4)$'
+        line: 'MaxThreads 4'
+
+    - name: ClamAV config - clamd - ReadTimeout
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?ReadTimeout 300$'
+        line: 'ReadTimeout 300'
+
+    - name: ClamAV config - clamd - MaxScanSize
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?MaxScanSize (1000M|200M)$'
+        line: 'MaxScanSize 200M'
+
+    - name: ClamAV config - clamd - MaxFileSize
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?MaxFileSize (400M|200M)$'
+        line: 'MaxFileSize 200M'
+
+    - name: ClamAV config - clamd - MaxRecursion
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?MaxRecursion (10|20)$'
+        line: 'MaxRecursion 20'
+
+    - name: ClamAV config - clamd - MaxFiles
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?MaxFiles (15000|10000)$'
+        line: 'MaxFiles 10000'
+
+    - name: ClamAV config - clamd - User
+      ansible.builtin.replace:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#?User clamav$'
+        # replace: 'User {{ ansible_facts['env']['USER'] }}'
+        replace: 'User clamav'
+
+    # - name: ClamAV config - clamd - DetectPUA
+    #   ansible.builtin.lineinfile:
+    #     path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+    #     regexp: '^#?DetectPUA yes$'
+    #     line: 'DetectPUA yes'
+
+    - name: ClamAV config - clamd - ExcludePath
+      ansible.builtin.replace:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/clamd.conf
+        regexp: '^#ExcludePath \^/sys/$'
+        replace: "ExcludePath ^/proc/|^/sys/|^/dev/|^/run/|{{ ansible_facts['env']['HOME'] }}/.clamav/quarantine"
+
+    # ##############
+    # freshclam.conf
+    # ##############
+
+    - name: ClamAV config - freshclam - config file - create from example file
+      ansible.builtin.copy:
+        src: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf.sample
+        dest: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        force: false # the file will only be transferred if the destination does not exist
+        mode: '0644'
+
+    - name: ClamAV config - freshclam - config file - uncomment 'Example' line
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        regexp: '^(# )?Example$' # Idempotent: funktioniert bei mehrfacher Ausführung, "Example" **oder** "# Example"
+        line: '# Example'
+
+    - name: ClamAV config - freshclam - set Database Owner
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        # regexp: '^#?DatabaseOwner\s+.*'
+        # line: 'DatabaseOwner {{ ansible_facts['env']['USER'] }}'
+        regexp: '^#?#DatabaseOwner clamav'
+        line: 'DatabaseOwner clamav'
+
+    - name: ClamAV config - freshclam - set DatabaseDirectory
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        regexp: '^#?DatabaseDirectory\s+.*'
+        line: 'DatabaseDirectory /var/home/linuxbrew/.linuxbrew/var/lib/clamav'
+
+    - name: ClamAV config - freshclam - set UpdateLogFile
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        regexp: '^#?UpdateLogFile\s+.*'
+        line: 'UpdateLogFile /var/home/linuxbrew/.linuxbrew/var/log/freshclam.log'
+
+    - name: ClamAV config - freshclam - set LogSyslog
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        regexp: '^#?LogSyslog\s+.*'
+        line: 'LogSyslog yes'
+
+    - name: ClamAV config - freshclam - set LogFacility
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        regexp: '^#?LogFacility\s+.*'
+        line: 'LogFacility LOG_LOCAL6'
+
+    - name: ClamAV config - freshclam - set Checks
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        regexp: '^#?Checks\s+.*'
+        line: 'Checks 12'
+
+    - name: ClamAV config - freshclam - set ScriptedUpdates
+      ansible.builtin.lineinfile:
+        path: /home/linuxbrew/.linuxbrew/etc/clamav/freshclam.conf
+        regexp: '^#?ScriptedUpdates\s+.*'
+        line: 'ScriptedUpdates yes'
+
+    # ###############
+    # Systemd service
+    # ###############
+
+    # ### clamd
+
+    - name: ClamAV config - Systemd service - create unit file for clamd.serice (env_user)
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/clamd.service"
+        create: true
+        mode: '0644'
+        block: |
+          [Unit]
+          Description=ClamAV AntiVirus Daemon
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/home/linuxbrew/.linuxbrew/sbin/clamd --foreground=true
+          Restart=on-failure
+          RestartSec=5
+          User={{ ansible_facts['env']['USER'] }}
+          Group={{ ansible_facts['env']['USER'] }}
+
+          [Install]
+          WantedBy=default.target
+
+    - name: ClamAV config - Systemd - reread configs (env_user)
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+        scope: user
+
+    - name: ClamAV config - Systemd service - start or enable clamd.service (env_user)
+      ansible.builtin.systemd_service:
+        name: clamd.service
+        scope: user
+        enabled: true
+        state: started
+
+    # ### freshclam
+
+    - name: ClamAV config - Systemd service - create unit file for freshclam.service (env_user)
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/freshclam.service"
+        create: true
+        mode: '0644'
+        block: |
+          [Unit]
+          Description=ClamAV FreshClam Daemon
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/home/linuxbrew/.linuxbrew/bin/freshclam --daemon --foreground=true
+          Restart=on-failure
+          RestartSec=300
+          User={{ ansible_facts['env']['USER'] }}
+          Group={{ ansible_facts['env']['USER'] }}
+
+          [Install]
+          WantedBy=default.target
+
+    - name: ClamAV config - Systemd - reread configs (env_user)
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+        scope: user
+
+    - name: ClamAV config - Systemd service - start or enable freshclam.service (env_user)
+      ansible.builtin.systemd_service:
+        name: freshclam.service
+        scope: user
+        enabled: true
+        state: started

@@ -1,0 +1,106 @@
+---
+
+- name: User
+  hosts: localhost
+  connection: local
+  tasks:
+    # encrypted vault.yml contains initial 'user_password' for user 'R2D2' (see below)
+    - name: Include vars - inventory - group_vars
+      ansible.builtin.include_vars:
+        dir: ../inventory/group_vars
+
+    # 2nd user with sudo privileges in case of problems with 1st user
+    - name: User - create new user account - R2D2
+      become: true
+      ansible.builtin.user:
+        name: "R2D2"
+        create_home: true
+        shell: /bin/bash
+        # groups: wheel,dialout,docker,incus-admin,libvirt,clamav
+        groups: wheel
+        append: true
+        # password: "{{ 'InitPW:-)' | password_hash('sha512') }}"
+        password: "{{ user_password | password_hash('sha512') }}" # "user_password" encrypted in ../inventory/group_vars/vault.yml
+
+    # default "/etc/shadow": root:!::0:99999:7:::
+    # - ! -> password locked; no login via password possible, only ssh-key or sudo allowed
+    #
+    # - name: User - block interactive login - root
+    #   become: true
+    #   ansible.builtin.user:
+    #     name: "root"
+    #     shell: /usr/sbin/nologin # blocks login with error message # or: "/bin/false": stops every login without error message
+    #       # - prevents all interactive logins (incl. SSH, Console, su)
+    #       # - advantage: keeps account for system services so they keep working
+    #     # password_lock: true # locks / blocks login with password # already set by default, se "/etc/shadow"
+    #       # - SSH-login with key still possible
+
+    # maybe add: /etc/ssh/sshd_config: PermitRootLogin no
+
+    # /usr/sbin/nologin + password_lock + PermitRootLogin no: no login via root at all, but accounts stays available for system things
+    # -> you should not deactivate root user
+
+    # ### CHECK
+
+    - name: User - Check if docker is available
+      ansible.builtin.command: command -v docker
+      register: docker_check
+      changed_when: false
+      failed_when: false  # Task wird nie als fehlgeschlagen markiert (bleibt "grün")
+                          # echter Return-Code (z.B. 127 für "command not found", oder 1, ...) wird in "docker_check" gespeichert
+      # ignore_errors: true # hier wäre die ausgabe "rot", würde aber (einfach/ebenfalls) weiterlaufen
+
+    - name: User - Check if incus is available
+      ansible.builtin.command: command -v incus
+      register: incus_check
+      changed_when: false
+      failed_when: false
+      # ignore_errors: true
+
+    - name: User - Check if virsh is available
+      ansible.builtin.command: command -v virsh
+      register: virsh_check
+      changed_when: false
+      failed_when: false
+      # ignore_errors: true
+
+    - name: User - Check if clamd is available
+      ansible.builtin.command: command -v clamd
+      register: clamd_check
+      changed_when: false
+      failed_when: false
+      # ignore_errors: true
+
+      # ### ADD
+
+    - name: User - Add R2D2 to docker group if docker exists in PATH
+      become: true
+      ansible.builtin.user:
+        name: "R2D2"
+        groups: docker
+        append: true
+      when: docker_check.rc == 0
+
+    - name: User - Add R2D2 to incus-admin group if incus exists in PATH
+      become: true
+      ansible.builtin.user:
+        name: "R2D2"
+        groups: incus-admin
+        append: true
+      when: incus_check.rc == 0
+
+    - name: User - Add R2D2 to libvirt group if virsh exists in PATH
+      become: true
+      ansible.builtin.user:
+        name: "R2D2"
+        groups: libvirt
+        append: true
+      when: virsh_check.rc == 0
+
+    - name: User - Add R2D2 to clamav group if clamd exists in PATH
+      become: true
+      ansible.builtin.user:
+        name: "R2D2"
+        groups: clamav
+        append: true
+      when: clamd_check.rc == 0

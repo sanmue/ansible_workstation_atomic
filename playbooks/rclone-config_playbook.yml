@@ -1,0 +1,29 @@
+---
+
+- name: Rclone config
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Rclone config - pCloud - create folder ~/.local/bin (env_user)
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: "0755"
+        state: directory
+
+    - name: Rclone config - pCloud - copy script to mount pcloud to ~/.local/bin (env_user)
+      ansible.builtin.copy:
+        src: files/rclone_pCloud-Mnt.sh
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/rclone_pCloud-Mnt.sh"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: "0755"
+
+    - name: Rclone config - pCloud - create folder ~/mnt/pCloud (env_user)
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/mnt/pCloud"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: "0755"
+        state: directory

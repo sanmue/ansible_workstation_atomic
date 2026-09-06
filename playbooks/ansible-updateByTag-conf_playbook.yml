@@ -1,0 +1,18 @@
+---
+
+- name: Ansible update by tag
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Ansible update by tag - copy script to env_users .local/bin (env_user)
+      tags: shellrc
+      become: true
+      become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.copy:
+        src: "files/ansible_update-by-tag.sh"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/ansible_update-by-tag.sh"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: '0755'
+        backup: false
+        remote_src: true

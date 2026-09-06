@@ -1,0 +1,606 @@
+---
+
+- name: Zsh config
+  hosts: localhost
+  connection: local
+  tasks:
+    # - name: Zsh config - check status .zshrc (env_user)
+    #   tags: shellrc
+    #   ansible.builtin.stat:
+    #     path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+    #   register: zshrc_user
+
+    # - name: Zsh config - backup existing .zshrc (env_user)
+    #   tags: shellrc
+    #   ansible.builtin.copy:
+    #     src: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+    #     dest: "{{ ansible_facts['env']['HOME'] }}/.zshrc.old"
+    #     owner: "{{ ansible_facts['env']['USER'] }}"
+    #     group: "{{ ansible_facts['env']['USER'] }}"
+    #     mode: u=rw,g=r,o=r
+    #     backup: true
+    #   when:
+    #     - zshrc_user.stat.exists
+
+    # - name: Zsh config - delete existing .zshrc (env_user)
+    #   tags: shellrc
+    #   ansible.builtin.file:
+    #     path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+    #     state: absent
+    #   when:
+    #     - zshrc_user.stat.exists
+
+    # zsh creates file 'chpwd-recent-dirs' there:
+    - name: Zsh config - create home-.local-share-zsh folder if it does not exist (env_user)
+      tags: shellrc
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/share/zsh"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rw,g=r,o=r
+        state: directory
+        modification_time: preserve
+
+    - name: Zsh config - create .zshrc if it does not exist (env_user)
+      tags: shellrc
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rw,g=r,o=r
+        state: touch
+        modification_time: preserve
+
+    # including backup of .zshrc
+    - name: Zsh config - Insert/Update additional paths and config - homebrew (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: true
+        marker: "### {mark} 'homebrew' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------------------------------------------
+          # homebrew
+          # -----------------------------------------------
+          # Prioritize system binaries to prevent brew overriding things like dbus
+          # See: https://github.com/ublue-os/brew/blob/54b30cc07d3211fca65ca5cc724e9812c8c79b77/system_files/usr/lib/systemd/system/brew-upgrade.service#L17-L22
+          if [[ $- == *i* && -z "${HOMEBREW_PREFIX:-}" && -d /home/linuxbrew/.linuxbrew && ! "$PATH" =~ "/home/linuxbrew.linuxbrew" ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv | grep -Ev '\bPATH=')"
+            HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}"
+            export PATH="${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin"
+          fi
+
+    - name: Zsh config - activate escape sequence to set tab title in terminal (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'escape sequence - tab title in terminal' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------------------------------------------------
+          # activate escape sequence to set tab title in terminal
+          # -----------------------------------------------------
+          # Tab title: user@hostname:path (like Bash):
+          function set_title() {
+            print -nP "\033]0;%n@%m:%~\033\\"
+          }
+          # Update title with every prompt:
+          precmd() { set_title }
+
+    - name: Zsh config - Insert/Update additional paths and config - starship shell prompt (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'starship shell prompt' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------------------
+          # starship shell prompt - Add the init script
+          # -------------------------------------------
+          if command -v starship >/dev/null 2>&1; then
+            eval "$(starship init zsh)"
+          fi
+
+    - name: Zsh config - Insert initial custom config in .zshrc (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'custom zsh config' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------
+          # custom initial zsh config
+          # -------------------------
+
+          # Theming section
+          autoload -Uz compinit promptinit colors zcalc
+          # -U: Alias-Ersetzung innerhalb der Funktion deaktivieren
+          # -z sorgt dafuer, dass die Funktionen als Zsh-Funktionen geladen werden
+          compinit -d # verwendet Dump-Datei (~/.zcompdump), um Completion-Infos zu cachen # ~/.zcompdump wird ohnehin standardm. verwendet -> -d kann weg
+          promptinit
+          colors
+
+          # Color man pages
+          export LESS_TERMCAP_mb=$'\E[01;32m'
+          export LESS_TERMCAP_md=$'\E[01;32m'
+          export LESS_TERMCAP_me=$'\E[0m'
+          export LESS_TERMCAP_se=$'\E[0m'
+          export LESS_TERMCAP_so=$'\E[01;47;34m'
+          export LESS_TERMCAP_ue=$'\E[0m'
+          export LESS_TERMCAP_us=$'\E[01;36m'
+          export LESS=-R
+
+          # Options section
+          # setopt interactivecomments
+          setopt correct                                            # Auto correct mistakes
+          setopt extendedglob                                       # Extended globbing. Allows using regular expressions with *
+          setopt nocaseglob                                         # Case insensitive globbing
+          setopt rcexpandparam                                      # Array expension with parameters
+          setopt nocheckjobs                                        # Don't warn about running processes when exiting
+          setopt numericglobsort                                    # Sort filenames numerically when it makes sense
+          setopt nobeep                                             # No beep
+          setopt appendhistory                                      # Immediately append history instead of overwriting
+          setopt histignorealldups                                  # If a new command is a duplicate, remove #the older one
+          setopt autocd                                             # if only directory path is entered, cd #there.
+          setopt inc_append_history                                 # save commands are added to the history #immediately, otherwise only when shell exits.
+          setopt histignorespace                                    # Don't save commands that start with #space
+
+          zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' # Case insensitive tab completion
+          zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"   # Colored completion (different colors for dirs/files/etc)
+          zstyle ':completion:*' rehash true                        # automatically find new executables in path
+          # Speed up completions
+          zstyle ':completion:*' accept-exact '*(N)'
+          zstyle ':completion:*' use-cache on
+          zstyle ':completion:*' cache-path ~/.zsh/cache
+          HISTFILE=~/.zhistory
+          HISTSIZE=10000
+          SAVEHIST=10000
+          WORDCHARS=${WORDCHARS//\/[&.;]}                            # Don't consider certain characters part of the word
+
+          # Keybindings section
+          bindkey -e                                                 # use Emacs mode
+          bindkey '^[[7~' beginning-of-line                          # Home key
+          bindkey '^[[H' beginning-of-line                           # Home key
+          if [[ "${terminfo[khome]}" != "" ]]; then
+            bindkey "${terminfo[khome]}" beginning-of-line           # [Home] - Go to beginning of line
+          fi
+          bindkey '^[[8~' end-of-line                                # End key
+          bindkey '^[[F' end-of-line                                 # End key
+          if [[ "${terminfo[kend]}" != "" ]]; then
+            bindkey "${terminfo[kend]}" end-of-line                  # [End] - Go to end of line
+          fi
+          bindkey '^[[2~' overwrite-mode                             # Insert key
+          bindkey '^[[3~' delete-char                                # Delete key
+          bindkey '^[[C'  forward-char                               # Right key
+          bindkey '^[[D'  backward-char                              # Left key
+          bindkey '^[[5~' history-beginning-search-backward          # Page up key
+          bindkey '^[[6~' history-beginning-search-forward           # Page down key
+
+          # Navigate words with ctrl+arrow keys
+          bindkey '^[Oc' forward-word                                #
+          bindkey '^[Od' backward-word                               #
+          bindkey '^[[1;5D' backward-word                            #
+          bindkey '^[[1;5C' forward-word                             #
+          bindkey '^H' backward-kill-word                            # delete previous word with ctrl+backspace
+          bindkey '^[[Z' undo                                        # Shift+tab undo last action
+
+          # Plugins section: Enable fish style features
+          # Use autocomplete
+          if [[ -r /var/home/linuxbrew/.linuxbrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]]; then
+            source /var/home/linuxbrew/.linuxbrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+          fi
+          # Use autosuggestions
+          if [[ -r /var/home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+            source /var/home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+          fi
+          # Use syntax highlighting
+          if [[ -r /var/home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+            source /var/home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+          fi
+          # Use history substring search
+          if [[ -r /var/home/linuxbrew/.linuxbrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh ]]; then
+            source /var/home/linuxbrew/.linuxbrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+
+            # bind UP and DOWN arrow keys to history substring search
+            zmodload zsh/terminfo
+            bindkey "$terminfo[kcuu1]" history-substring-search-up
+            bindkey "$terminfo[kcud1]" history-substring-search-down
+            bindkey '^[[A' history-substring-search-up
+            bindkey '^[[B' history-substring-search-down
+          fi
+
+          # Offer to install missing package if command is not found
+          if [[ -r /usr/share/zsh/functions/command-not-found.zsh ]]; then
+            source /usr/share/zsh/functions/command-not-found.zsh
+            export PKGFILE_PROMPT_INSTALL_MISSING=1
+          fi
+
+          # File and Dir colors for ls and other outputs
+          export LS_OPTIONS='--color=auto'
+          eval "$(dircolors -b)"
+
+          # Alias section
+          alias ls='ls $LS_OPTIONS'
+          alias cp="cp -i"                                                # Confirm before overwriting something
+          alias df='df -h'                                                # Human-readable sizes
+          alias free='free -m'                                            # Show sizes in MB
+
+    - name: Zsh config - additional EXPORTS - colored password prompt (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'additional EXPORTS' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------
+          # additional EXPORTS
+          # ------------------
+          # Colored sudo password prompt
+          # https://wiki.archlinux.org/title/Sudo#Colored_password_prompt
+          export SUDO_PROMPT="$(tput setaf 1 bold)[sudo]$(tput sgr0) password for $(tput setaf 6)%p$(tput sgr0): "
+
+    - name: Zsh config - custom alias definitions (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'custom alias definitions' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------------
+          # custom alias definitions
+          # ------------------------
+
+          # KITTY - alias to be able to use kitty features when connecting to remote servers (e.g use tmux on remote server)
+          # alias kssh="kitty +kitten ssh" # kitty currently not installed
+
+          # grep
+          alias grep='grep --color=auto'
+
+          # ls -> eza oder exa - list directory contents
+          if command -v eza >/dev/null 2>&1; then
+              alias ls='eza --color=auto --icons --group --time-style=long-iso --group-directories-first'
+              # '--group' und '--time-style' nur bei '-l'; dann schon dabei
+          elif command -v exa >/dev/null 2>&1; then
+              alias ls='exa --color=auto --icons --group --time-style=long-iso --group-directories-first'
+              # '--group' und '--time-style' nur bei '-l'; dann schon dabei
+          else
+              alias ls='ls --color=auto --group-directories-first'
+          fi
+
+          alias ll='ls -la --ignore-glob ..'  # show long listing of all except ".."
+          alias l='ls -la --ignore-glob .?*'  # show long listing but no hidden dotfiles except "." (rekursiv bis 1. Unterverzeichnis, mit dessen Inhalt)
+          # tree-view:
+          alias lst='ls --tree'           # lst = ls tree
+          alias lstl='lst --long'         # lstl = ls tree long
+          alias lstla='lstl --all'        # lstla = ls tree long all
+          alias lstlale='lstla --level'   # lstlale = ls tree long all level   # Aufruf: lstlale 3 (entspricht: ls --tree --long --all --level 3 )
+          alias lstle='lst --level'       # lstle = ls tree level              # Aufruf: lstle 3   (entspricht: ls --tree --level 3)
+
+          # lsblk - list block devices
+          alias lsblku='lsblk -o NAME,MAJ:MIN,UUID,RM,SIZE,FSTYPE,RO,TYPE,MOUNTPOINTS' # u.a. mit UUID und FSTYPE
+          alias lsblkf='lsblk --fs --paths' # u.a. mit: filesystem info, UUID und full device paths
+
+          # cat -> bat # concatenate files and print on the standard output
+          if command -v bat >/dev/null 2>&1; then
+              alias cat='bat --plain' # --force-colorization
+              alias catp='cat --paging=never' # --force-colorization
+              alias catn='bat --number' # --force-colorization
+              alias catf='bat --style="full"' # --force-colorization
+          fi
+
+    - name: Zsh config - custom alias definitions - mount pCloud (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'mount pCloud' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------------------
+          # mount pCloud via rclone
+          # -----------------------
+          if [[ -f "${HOME}/.local/bin/rclone_pCloud-Mnt.sh" ]]; then
+            alias pcloudmnt='${HOME}/.local/bin/rclone_pCloud-Mnt.sh'
+          fi
+
+    - name: Zsh config - custom alias definitions - pip install or upgrade modules in requirements.txt (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'pip - requirements.txt' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------------------------------------------------
+          # pip install/upgrade modules in requirements.txt requirements.txt (--user)
+          # -------------------------------------------------------------------------
+          # find all requirements.txt files in ansible_workstation_atomic folders and install or upgrade them
+          if command -v pip >/dev/null 2>&1; then
+            alias piprin='find $HOME -path "$HOME/*ansible_workstation_atomic/*" -type f -name "requirements.txt" -exec pip install --user -r {} \;'
+            alias piprup='find $HOME -path "$HOME/*ansible_workstation_atomic/*" -type f \
+                  -name "requirements.txt" -exec pip install --upgrade --force-reinstall --user -r {} \;'
+          fi
+
+    - name: Zsh config - custom alias definitions - direnv for uv init (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'direnv for uv init' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------
+          # direnv for uv init
+          # ------------------
+          # if 'direnv' and 'uv' are installed, create a .envrc file containing/adding 'layout uv'
+          if command -v direnv >/dev/null 2>&1 && command -v uv >/dev/null 2>&1; then
+            alias direnvuv='if [[ ! -f .envrc ]]; then touch .envrc; direnv allow; fi; grep -q "^layout uv$" .envrc || echo "layout uv" >> .envrc'
+          fi
+
+    - name: Zsh config - custom alias definitions - tasks of ansible playbook using 'tags' (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'ansible playbook tags' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------------------------------
+          # execute selected tasks of ansible playbook using 'tags'
+          # -------------------------------------------------------
+          if [[ -f "${HOME}/.local/bin/ansible_update-by-tag.sh" ]]; then
+            # - `nnnplugs`: create / update 'nnn' plugins + xterm conf for nnn-peview-tui
+            if command -v nnn >/dev/null 2>&1; then
+              alias upnnnplugs='${HOME}/.local/bin/ansible_update-by-tag.sh nnnplugs'
+            fi
+            # - `shellrc`: create / update shell conf (e.g. .bashrc, .zshrc)
+            alias upshellrc='${HOME}/.local/bin/ansible_update-by-tag.sh shellrc'
+            # - `vicinae` (desktop launcher): extensions update + conf
+            if command -v vicinae >/dev/null 2>&1; then
+              alias upvic='${HOME}/.local/bin/ansible_update-by-tag.sh upvic'
+            fi
+            # - `vimrc`: create / update vim conf + plugins
+            if command -v vim >/dev/null 2>&1; then
+              alias upvimrc='${HOME}/.local/bin/ansible_update-by-tag.sh vimrc'
+            fi
+          fi
+
+    - name: Zsh config - custom alias definitions - 'zoxide' (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'zoxide' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------
+          # zoxide ('cd' replacement)
+          # -------------------------
+          # - zoxide - A smarter cd command for your terminal
+          # - see alsof further below: "Zsh config - Insert/Update additional paths and config - zoxide"
+          if command -v zoxide >/dev/null 2>&1; then
+            alias cd='z'
+            if command -v fzf >/dev/null 2>&1; then
+              alias cdi='zi' # cd with interactive selection (using fzf)
+            fi
+          fi
+
+    - name: Zsh config - custom alias definitions - 'clamdscan' (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'clamdscan' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ---------
+          # clamdscan
+          # ---------
+          if command -v clamdscan >/dev/null 2>&1; then
+            alias clamdscan='clamdscan --multiscan --infected --move=$HOME/.clamav/quarantine'
+          fi
+
+    - name: Zsh config - Insert/Update additional paths and config - default editor (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'vim' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------------------
+          # vim als Standard Editor setzen
+          # -------------------------------
+          if command -v vim >/dev/null 2>&1; then
+            export VISUAL=vim
+            export EDITOR="${VISUAL}"
+            export SUDO_EDITOR=rvim
+          fi
+
+    - name: Zsh config - Insert/Update additional paths and config - user-bin (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'user-bin' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------------------
+          # Benutzer-bin Verzeichnis an PATH anhaengen:
+          # -------------------------------------------
+          if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+            export PATH="$HOME/.local/bin:$PATH"
+          fi
+
+    # ### - activate mise for zsh
+    - name: Zsh config - Insert/Update additional paths and config - mise (User,all)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'mise' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ----
+          # mise
+          # ----
+          if command -v mise >/dev/null 2>&1; then
+            eval "$(mise activate zsh)"
+          fi
+
+    - name: Zsh config - Insert/Update additional paths and config - uv (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'uv' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------
+          # uv - shell autocompletion
+          # -------------------------
+          if command -v uv >/dev/null 2>&1; then
+            eval "$(uv generate-shell-completion zsh)"
+            eval "$(uvx --generate-shell-completion zsh)"
+          fi
+
+    - name: Zsh config - Insert/Update additional paths and config - zoxide (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'zoxide' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------
+          # zoxide
+          # ------
+          # - do AFTER init of 'starship'
+          # - see also further above: "Zsh config - custom alias definitions - 'zoxide'"
+          if command -v zoxide >/dev/null 2>&1; then
+            eval "$(zoxide init zsh)"
+          fi
+      # when:
+      #   - ansible_facts['distribution'] in ["Archlinux"]
+
+    - name: Zsh config - Insert/Update additional paths and config - SSHClick (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'SSHClick' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------
+          # SSHClick - shell autocompletion
+          # -------------------------------
+          if command -v sshc >/dev/null 2>&1; then
+            eval "$(_SSHC_COMPLETE=bash_source sshc)"
+          fi
+
+    - name: Zsh config - Insert/Update additional paths and config - nnn (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'nnn' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ---------------------------
+          # 'nnn' terminal file manager
+          # ---------------------------
+          # * https://github.com/jarun/nnn
+
+          export NNN_FIFO='/tmp/nnn.fifo'
+          export NNN_TERMINAL='xterm'
+          export NNN_PLUG='d:diffs;o:fzopen;j:autojump;p:preview-tui;r:pdfread;u:getplugs;v:imgview'
+
+          alias n='nnn_cdonquit -deiU -P p'
+          # detailed; open txt in $VISUAL; show file info bar; show user+group; start Plugin 'p' (-> preview-tui)
+
+          # --- cd on quit:
+          # * https://github.com/jarun/nnn/wiki/Basic-use-cases#configure-cd-on-quit
+          # * https://github.com/jarun/nnn/blob/master/misc/quitcd/quitcd.bash_sh_zsh
+
+          nnn_cdonquit ()
+          {
+              # Block nesting of nnn in subshells
+              [ "${NNNLVL:-0}" -eq 0 ] || {
+                  echo "nnn is already running"
+                  return
+              }
+
+              # The behaviour is set to cd on quit (nnn checks if NNN_TMPFILE is set)
+              # If NNN_TMPFILE is set to a custom path, it must be exported for nnn to
+              # see. To cd on quit only on ^G, remove the "export" and make sure not to
+              # use a custom path, i.e. set NNN_TMPFILE *exactly* as follows:
+              NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"             # only 'cd on quit' when ^G
+              # export NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"    # always 'cd on quit'
+
+              # Unmask ^Q (, ^V etc.) (if required, see `stty -a`) to Quit nnn
+              # stty start undef
+              # stty stop undef
+              # stty lwrap undef
+              # stty lnext undef
+
+              # The command builtin allows one to alias nnn to n, if desired, without
+              # making an infinitely recursive alias
+              command nnn "$@"
+
+              [ ! -f "$NNN_TMPFILE" ] || {
+                  . "$NNN_TMPFILE"
+                  rm -f -- "$NNN_TMPFILE" > /dev/null
+              }
+          }
+
+    # https://wiki.archlinux.org/title/Systemd/User#PATH
+    - name: Zsh config - systemd user import-environment (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'systemd user' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------
+          # systemd user import-environment
+          # -------------------------------
+          systemctl --user import-environment PATH
+
+    # https://github.com/direnv/direnv/blob/master/docs/hook.md
+    - name: Zsh config - direnv hook (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'direnv hook' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------
+          # direnv hook
+          # -----------
+          if command -v direnv >/dev/null 2>&1; then
+            eval "$(direnv hook zsh)"
+          fi
+
+    # https://docs.atuin.sh/latest/guide/installation/#installing-the-binary
+    - name: Zsh config - atuin (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        backup: false
+        marker: "### {mark} 'atuin' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------------------
+          # atuin - improved shell history
+          # ------------------------------
+          if command -v atuin >/dev/null 2>&1; then
+            eval "$(atuin init zsh)"
+          fi
+
+    # ### -----------
+    # ### zsh profile
+    # ### -----------
+    - name: Zsh profile config - source .zshrc (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zprofile"
+        backup: true
+        create: true
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rw,g=r,o=r
+        marker: "### {mark} 'source .zshrc' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------
+          # source .zshrc
+          # -------------
+          # Get the aliases and functions ...
+          if [ -f ~/.zshrc ]; then
+            . ~/.zshrc
+          fi

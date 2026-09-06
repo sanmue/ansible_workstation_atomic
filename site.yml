@@ -1,0 +1,56 @@
+---
+
+# ### Ansible
+- ansible.builtin.import_playbook: playbooks/ansible-facts_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/ansible-galaxy-collection_playbook.yml # noqa name[play]
+
+# ### CLI tools
+# - install
+- ansible.builtin.import_playbook: playbooks/cli-packages_playbook.yml # noqa name[play]
+
+- ansible.builtin.import_playbook: playbooks/mise-node_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/mise-python_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/node-npm_playbook.yml # noqa name[play] # place after "mise-node_playbook.yml"
+- ansible.builtin.import_playbook: playbooks/nnn-plugins_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/vim-plugins_playbook.yml # noqa name[play]
+
+# - config (including services)
+- ansible.builtin.import_playbook: playbooks/ansible-updateByTag-conf_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/clamav-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/direnv-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/rclone-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/starship-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/syncthing-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/uv-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/vim-config_playbook.yml # noqa name[play]
+
+- ansible.builtin.import_playbook: playbooks/bash-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/zsh-config_playbook.yml # noqa name[play]
+
+# ### GUI apps
+# - install
+- ansible.builtin.import_playbook: playbooks/flatpak_playbook.yml # noqa name[play]
+# waiting for stable version # - ansible.builtin.import_playbook: playbooks/vicinae_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/zed_playbook.yml # noqa name[play]
+
+# - config
+- ansible.builtin.import_playbook: playbooks/vscode-extensions-config_playbook.yml # noqa name[play]
+# waiting for stable version # - ansible.builtin.import_playbook: playbooks/vicinae-config_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/dolphin-config_playbook.yml # noqa name[play]
+
+# ### Gnome
+# - install
+- ansible.builtin.import_playbook: playbooks/gnome-papirus-icon-theme_playbook.yml # noqa name[play]
+  when:
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
+
+# - config
+- ansible.builtin.import_playbook: playbooks/gnome-config_playbook.yml # noqa name[play]
+  when:
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
+- ansible.builtin.import_playbook: playbooks/gnome-ptyxis-config_playbook.yml # noqa name[play]
+  when:
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
+
+# ### USER
+- ansible.builtin.import_playbook: playbooks/user_playbook.yml # noqa name[play]

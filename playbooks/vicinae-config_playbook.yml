@@ -1,0 +1,158 @@
+---
+
+- name: Vicinae launcher config
+  hosts: localhost
+  connection: local
+  tasks:
+    # https://docs.vicinae.com/install/script#custom-prefix-caveats
+    - name: Vicinae launcher config - create symlink for vacinae
+      tags: upvic
+      ansible.builtin.file:
+        src: "{{ ansible_facts['env']['HOME'] }}/.local/lib/vicinae/usr/bin/vicinae"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/vicinae"
+        state: link
+        # owner: "{{ ansible_facts['env']['USER'] }}"
+        # group: "{{ ansible_facts['env']['USER'] }}"
+        mode: '0755'
+
+    # https://docs.vicinae.com/install/script#custom-prefix-caveats
+    - name: Vicinae launcher config - create symlink for vicinae-node
+      tags: upvic
+      ansible.builtin.file:
+        src: "{{ ansible_facts['env']['HOME'] }}/.local/lib/vicinae/usr/bin/node"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/vicinae-node"
+        state: link
+        # owner: "{{ ansible_facts['env']['USER'] }}"
+        # group: "{{ ansible_facts['env']['USER'] }}"
+        mode: '0755'
+
+    - name: Vicinae launcher config - create users systemd service folder
+      tags: upvic
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/"
+        state: directory
+        recurse: true
+        # owner: "{{ ansible_facts['env']['USER'] }}"
+        # group: "{{ ansible_facts['env']['USER'] }}"
+        mode: '0755'
+
+    # https://docs.vicinae.com/install/script#custom-prefix-caveats
+    - name: Vicinae launcher config - create symlink for vicinae service
+      tags: upvic
+      ansible.builtin.file:
+        src: "{{ ansible_facts['env']['HOME'] }}/.local/lib/systemd/user/vicinae.service"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/vicinae.service"
+        state: link
+        # owner: "{{ ansible_facts['env']['USER'] }}"
+        # group: "{{ ansible_facts['env']['USER'] }}"
+        mode: '0755'
+
+    - name: Vicinae launcher config - daemon reload + restart service (user)
+      tags: upvic
+      become: true
+      become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.systemd_service:
+        name: vicinae
+        enabled: true
+        state: started
+        daemon_reload: true
+        scope: user
+
+    # Vicinae (service) muss gestaretet sein, sodass "~/.config/vicinae" und
+    # "~/.local/share/vicinae" (mit "vicinae.db") angelegt werden
+    - name: Vicinae launcher config - shortcut - websearch - Check if already exists in Vicinae DB
+      tags: upvic
+      ansible.builtin.command: >
+        sqlite3 ~/.local/share/vicinae/vicinae.db "
+        SELECT COUNT(*) FROM shortcut WHERE name = 'websearch';"
+      register: shortcut_exists
+      changed_when: false
+      # ignore_errors: true # initial run: table "shortcut" does not yet exist
+
+    - name: Vicinae launcher config - shortcut - websearch (with ecosia and firefox)
+      tags: upvic
+      ansible.builtin.shell: >
+        sqlite3 ~/.local/share/vicinae/vicinae.db "
+        INSERT INTO shortcut
+        (id, name, icon, url, app, open_count, created_at, updated_at, last_used_at)
+        VALUES
+        ('$(uuidgen)',
+        'websearch',
+        'icon://system/firefox',
+        'https://www.ecosia.org/search?method=index&q={argument}',
+        'org.mozilla.firefox.desktop',
+        0,
+        $(date +%s),
+        $(date +%s),
+        $(date +%s));
+        "
+      changed_when: shortcut_exists.stdout | int == 0
+      when:
+        - shortcut_exists.stdout | int == 0  # Nur ausführen, wenn der Shortcut noch nicht existiert
+
+    - name: Vicinae launcher config - extensions - set vars
+      tags: upvic
+      ansible.builtin.set_fact:
+        repo_url: "https://github.com/vicinaehq/extensions.git"
+        repo_dest_dir: "/tmp/extensions"
+        extensions:
+          - arch-packages
+          # - brotab # not used
+          - case-converter
+          - dashboard-icons
+          - dbus
+          - firefox
+          # - fuzzy-files # required 'goldfish' does not build reliably
+          - gnome-dnd
+          - gnome-settings
+          - html-symbol-finder
+          - it-tools
+          - nix
+          - pacman-updates
+          - port-killer
+          - process-manager
+          - ssh
+          - systemd
+          - vscode-recents
+          - wifi-commander
+
+    - name: Vicinae launcher config - extensions - clone extension git repo
+      tags: upvic
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dest_dir }}"
+        force: true
+        version: main
+
+    - name: Vicinae launcher config - install vicinae extensions
+      community.general.npm:
+        path: "{{ repo_dest_dir }}/extensions/{{ item }}"
+        state: present
+        production: true
+        ignore_scripts: true
+      loop: "{{ extensions | default([]) }}"
+      when:
+        - extensions | default([]) | length > 0
+
+    - name: Vicinae launcher config  - check if build output exists
+      ansible.builtin.stat:
+        path: "{{ repo_dest_dir }}/extensions/{{ item }}/dist"
+        get_checksum: false
+      register: build_dir_stat
+      changed_when: false
+      loop: "{{ extensions | default([]) }}"
+      when:
+        - extensions | default([]) | length > 0
+
+    - name: Vicinae launcher config - run npm build only if needed
+      ansible.builtin.command: npm run build
+      args:
+        chdir: "{{ repo_dest_dir }}/extensions/{{ item }}"
+      loop: "{{ extensions | default([]) }}"
+      when:
+        - extensions | default([]) | length > 0
+        - not build_dir_stat.results[extensions.index(item)].stat.exists
+      register: build_result
+      changed_when:
+        - build_result.rc == 0
+        - "'Build successful' in build_result.stdout"

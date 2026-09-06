@@ -1,0 +1,15 @@
+---
+
+- name: Dolphin config
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Dolphin config - check environmen variable - GTK_THEME
+      ansible.builtin.command: flatpak override --user --show org.kde.dolphin
+      register: gtktheme
+      changed_when: false
+
+    - name: Dolphin config - set environmen variable - GTK_THEME
+      when: "'GTK_THEME=Adwaita:dark' not in gtktheme.stdout"
+      ansible.builtin.command: flatpak override --user --env=GTK_THEME=Adwaita:dark org.kde.dolphin
+      changed_when: true # changed only of task is executed

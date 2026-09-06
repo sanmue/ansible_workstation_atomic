@@ -1,0 +1,66 @@
+---
+
+- name: Vim plugins
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Vim plugins - create folder for vim plugins
+      tags: vimrc
+      # become: true
+      # become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.command:
+        cmd: "mkdir -p /home/{{ ansible_facts['env']['USER'] }}/.vim/pack/git-plugins/start"
+      args:
+        creates: /home/{{ ansible_facts['env']['USER'] }}/.vim/pack/git-plugins/start
+
+    - name: Vim plugins - vim-ale
+      tags: vimrc
+      # become: true
+      # become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.git:
+        repo: "https://github.com/dense-analysis/ale.git"
+        dest: "/home/{{ ansible_facts['env']['USER'] }}/.vim/pack/git-plugins/start/ale"
+        version: "master"
+        update: true
+        depth: 1
+
+    - name: Vim plugins - nnn.vim
+      tags: vimrc
+      # become: true
+      # become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.git:
+        repo: "https://github.com/mcchrish/nnn.vim"
+        dest: "/home/{{ ansible_facts['env']['USER'] }}/.vim/pack/git-plugins/start/nnn.vim"
+        version: "master"
+        update: true
+        depth: 1
+
+    - name: Vim plugins - vim-airline
+      tags: vimrc
+      # become: true
+      # become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.git:
+        repo: "https://github.com/vim-airline/vim-airline.git"
+        dest: "/home/{{ ansible_facts['env']['USER'] }}/.vim/pack/git-plugins/start/vim-airline"
+        version: "master"
+        update: true
+
+    - name: Vim plugins - vim-fugitive
+      tags: vimrc
+      # become: true
+      # become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.git:
+        repo: "https://github.com/tpope/vim-fugitive.git"
+        dest: "/home/{{ ansible_facts['env']['USER'] }}/.vim/pack/git-plugins/start/vim-fugitive"
+        version: "master"
+        update: true
+
+    - name: Vim plugins - undotree (git) (all)
+      tags: vimrc
+      # become: true
+      # become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.git:
+        repo: "https://github.com/mbbill/undotree.git"
+        dest: "/home/{{ ansible_facts['env']['USER'] }}/.vim/pack/git-plugins/start/undotree"
+        version: "master"
+        update: true

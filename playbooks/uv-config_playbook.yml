@@ -1,0 +1,29 @@
+---
+
+- name: Uv config
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Uv config - create config folder (env_user)
+      tags: shellrc
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/uv"
+        state: directory
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: "u=rwx,g=rx,o=rx"
+
+    # https://docs.astral.sh/uv/reference/settings/#python-downloads
+    # - "manual": Do not automatically download managed Python installations; require explicit installation
+    # - since still want to use 'mise' for python versions
+    - name: Uv config - config (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/uv/uv.toml"
+        create: true
+        marker: "### {mark} 'uv config' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          python-downloads = "manual"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rwx,g=rx,o=rx

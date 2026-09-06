@@ -1,0 +1,98 @@
+---
+
+- name: Install cli packages
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Install cli packages via homebrew
+      community.general.homebrew:
+        name:
+          # ### Fonts -------------------
+          - font-adwaita-mono-nerd-font
+          - font-fira-code-nerd-font
+          - font-jetbrains-mono-nerd-font
+          - font-meslo-lg-nerd-font
+          - font-source-code-pro
+          # ### -------------------------
+          #
+          # - docker, ... # already integrated (Blufin OS)
+          # - podman, ... # already integrated
+          #
+          # - 7zip                # already integrated
+          - age                   # Simple, modern, secure file encryption
+          - atuin                 # already installed # Improved shell history for zsh, bash, fish and nushell
+          # - bash                # already integrated
+          # - bash-completion     # already integrated
+          # - bash-color-prompt   # already integrated
+          - bat                   # already installed (preinstall via brew) # Cat clone with syntax highlighting and git integration
+          - borgbackup    # - Deduplicating backup program with compression and authenticated encryption
+          - chezmoi       # already installed # dotfiles management across multiple machines
+          - clamav        # - Anti-virus toolkit for Unix
+          # - cups          # already integrated # OpenPrinting CUPS - daemon package
+          # - curl          # already integrated
+          # - devbox        # not available with brew # cli tool to easily create isolated shells and containers
+          - direnv        # already installed # shell extension that manages your environment
+          # - distrobox     # already integrated # Use any linux distribution inside your terminal
+          # - espanso       # not available with brew # Cross-platform Text Expander written in Rust
+          - eza           # already installed # modern replacement for ls (community fork of exa)
+          # - firewalld     # already integrated # Firewall daemon with D-Bus interface
+          # - flatpak       # already integrated # Linux application sandboxing and distribution framework
+          # - fzf           # already integrated # Command-line fuzzy finder
+          # - ghostty       # not available with brew # Fast, native, feature-rich terminal emulator pushing modern features
+          # - git           # already integrated # distributed version control system
+          # - htop          # already integrated # Interactive process viewer
+          - hugo          # - static site generator
+          - inxi          # full featured system information script
+          # - jq            # already integrated # Command-line JSON processor
+          - micro         # - modern and intuitive terminal-based text editor # Alternative flatpak: io.github.zyedidia.micro
+          - mise          # already installed # The front-end to your dev env
+          - nnn           # - terminal file manager
+          - nload         # - Monitors network traffic and bandwidth usage
+          # - powershell    # - cross-platform automation and configuration tool/framework
+          #                 # Workaround: Docker-Container
+          #                 # - <https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-in-docker>
+          #                 # - <https://mcr.microsoft.com/en-us/artifact/mar/powershell/about>
+          # - rclone        # already integrated  # rsync for cloud storage
+          # - rsync         # already integrated # fast and versatile file copying tool for remote and local files
+          - shellcheck    # - Shell script analysis tool # also used in vim-ale
+          - shfmt         # - Format shell programs
+          # - speedtest-cli # (deprecated)
+          - sqlite        # already installed # A C library that implements an SQL database engine
+          - starship      # already installed # cross-shell prompt
+          - stress-ng     # Software to stress test a computer system in various selectable ways
+          - syncthing     # - Continuous Replication / Cluster Synchronization Thing
+          - tealdeer      # already installed # A fast tldr client in Rust
+          # - tmux          # already integrated # Terminal multiplexer
+          - trash-cli     # already installed # Command line trashcan (recycle bin) interface
+          - tree          # already installed # A directory listing program displaying a depth indented list of files
+          - unzip         # already installed # extracting and viewing files in .zip archives
+          - uv            # - Python package installer and resolver written in Rust
+          # - vicinae       # not available with brew # A focused launcher for your desktop
+          # - vim           # already integrated # Vi Improved, a highly configurable, improved version of the vi text editor
+          # - vim-ale       # not available with brew # Lint Engine (plugin for vim) # Alternative: install from git repo
+          # - wget          # already integrated # Network utility to retrieve files from the web
+          # - wireguard-tools  # already integrated # next generation secure network tunnel - tools for configuration
+          - wireshark     # network analyzer and capture tool - without graphical user interface # only cli (e.g. tshark, editcap, capinfos, ...)
+          - yq            # already installed # Command-line YAML, XML, TOML processor - jq wrapper for YAML/XML/TOML documents
+          - zoxide        # already installed # A smarter cd command for your terminal # also used with nnn
+          # - zsh           # already integrated # A very advanced and programmable command interpreter (shell) for UNIX
+          - zsh-autocomplete              # - Real-time type-ahead completion for Zsh
+          - zsh-autosuggestions           # - Fish-like autosuggestions for zsh
+          - zsh-completions               # - Additional completion definitions for Zsh
+          - zsh-syntax-highlighting       # - Fish shell like syntax highlighting for Zsh
+          - zsh-history-substring-search  # - ZSH port of Fish history search (up arrow)
+          # - zsh-you-should-use      # - ZSH plugin that reminds you to use existing aliases for commands you just typed
+          # - zstd          # already integrated # Zstandard - Fast real-time compression algorithm
+        state: present
+        update_homebrew: true
+
+    - name: Install cli packages via homebrew (Fedora Silverblue)
+      when:
+        - os_id == "fedora"
+        - os_variant_id == "silverblue"
+      community.general.homebrew:
+        name:
+          - fzf
+          - rclone
+        state: present
+        update_homebrew: true

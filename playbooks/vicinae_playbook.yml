@@ -1,0 +1,86 @@
+---
+
+- name: Vicinae launcher
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Vicinae launcher - download vicinae install script
+      tags: upvic
+      ansible.builtin.get_url:
+        url: https://vicinae.com/install.sh
+        dest: /tmp/vicinae-install.sh
+        mode: '0755'
+
+    - name: Vicinae launcher - execute vicinae install script
+      tags: upvic
+      ansible.builtin.command: bash /tmp/vicinae-install.sh --prefix {{ ansible_facts['env']['HOME'] }}/.local
+      register: vicinae_install
+      changed_when:
+        - "'successfully installed' in vicinae_install.stdout"
+        - vicinae_install.rc == 0
+      failed_when: vicinae_install.rc != 0
+
+    - name: Vicinae launcher - install required packages for extensions via brew
+      community.general.homebrew:
+        name:
+          # muss hier bereits vorhanden sein: npm
+          # - file    # already integrated # for 'Fuzzy Files': goldfish
+          # - gcc     # already integrated # for 'brotab': building psutil
+          # - git     # already integrated # clone extension repo
+          # - pipx    # recommended for install 'brotab' module # using 'uv tool' instead because of error message
+                      # - subprocess-exited-with-error # Building wheel for psutil (pyproject.toml) did not run successfully.
+                      # - error: command 'gcc-12' failed: No such file or directory ...
+          # - rust    # 'Fuzzy Files' extension requires 'goldfish' # 'goldfish' does not build reliably
+          # - sqlite  # already integrated # shortcut conf: via sqlite cmd
+          # - uv        # for install 'brotab' module via 'uv tool' # brotab not used anymore
+
+    # ----------------------------------------
+
+    # brotab not used
+    # - name: Vicinae launcher - check if brotab via uv tool already installed
+    #   tags: upvic
+    #   ansible.builtin.command: uv tool list
+    #   register: uvtool_list
+    #   changed_when: false
+    #   failed_when: uvtool_list.rc != 0
+
+    # - name: Vicinae launcher - install brotab via uv tool
+    #   tags: upvic
+    #   when:
+    #     - "'brotab' not in uvtool_list.stdout"
+    #   ansible.builtin.command: uv tool install brotab
+    #   register: uvtool_inst_brotab
+    #   changed_when:
+    #     - "'executables: brotab' in uvtool_inst_brotab.stdout"
+    #     - uvtool_inst_brotab.rc == 0
+    #   failed_when: uvtool_inst_brotab.rc != 0
+
+    # ----------------------------------------
+
+    # goldfish: IPC file finder # für Extension 'Fuzzy Files' # but 'goldfish' does not build reliably
+    # - name: Vicinae launcher - clone goldfish git repo
+    #   tags: upvic
+    #   ansible.builtin.git:
+    #     repo: https://github.com/sameoldlab/goldfish
+    #     dest: /tmp/goldfish
+    #     clone: true
+    #     update: true
+    #     version: main
+
+    # - name: Vicinae launcher - build goldfish
+    #   tags: upvic
+    #   ansible.builtin.command: cargo build --release
+    #   args:
+    #     chdir: /tmp/goldfish
+    #     creates: /tmp/goldfish/target/release/gf
+
+    # - name: Vicinae launcher - copy goldfish executable to usrer's .local/bin folder
+    #   tags: upvic
+    #   ansible.builtin.copy:
+    #     src: /tmp/goldfish/target/release/gf
+    #     dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/gf"
+    #     force: true
+    #     # owner: "{{ ansible_facts['env']['USER'] }}"
+    #     # group: "{{ ansible_facts['env']['USER'] }}"
+    #     mode: '0755'
+    #     remote_src: true

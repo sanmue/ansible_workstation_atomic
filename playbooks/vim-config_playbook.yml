@@ -1,0 +1,109 @@
+---
+
+- name: VIM config
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: VIM config - general - user
+      tags: vimrc
+      become: true
+      become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.blockinfile:
+        path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
+        backup: true
+        marker: '" ### {mark} - general - ANSIBLE MANAGED BLOCK ###'
+        block: |
+          set nocompatible      " Do not work in VI compatible mode, use extended VIM functionality
+
+          syntax on             " Vim5 and later versions support syntax highlighting
+          colorscheme wildcharm " slate " pablo " unokai " koehler
+          set background=dark   " If dark background + syntax highlighting, turn on this option as well
+
+          " The following cause vim to behave a lot differently from regular Vi
+          set showcmd           " Show (partial) command in status line
+          set showmatch         " Show matching brackets
+          set ignorecase        " Do case insensitive matching
+          set smartcase         " Do smart case matching
+          set incsearch         " Incremental search
+          set autowrite         " Automatically save before commands like :next and :make
+          set hidden            " Hide buffers when they are abandoned
+          set mouse=a           " Enable mouse usage (all modes)
+
+          set number            " Show line numbers
+          set ruler             " Show row and column ruler information
+          set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:·,nbsp:×
+          " set list            " show white space characters " set manual in cmd mode: ':set list'
+          " set nolist          " ':set nolist' in cmd mode to disable 'set list'
+          set tabstop=4         " show existing tab with 4 spaces width
+          set shiftwidth=4      " Number of auto-indent spaces; when indentig with '>', use 4 spaces
+          set expandtab         " On pressing tab, insert spaces
+          set smarttab          " <Tab> in front of a line inserts blanks
+          set hlsearch          " Highlight all search results
+          set undolevels=1000   " Number of undo levels
+
+    - name: VIM config - vimdiff - user
+      tags: vimrc
+      become: true
+      become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.blockinfile:
+        path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
+        create: true
+        mode: "0644"
+        marker: '" ### {mark} - vimdiff - ANSIBLE MANAGED BLOCK ###'
+        block: |
+          " shortcuts for vimdiff navigation
+          " next diff:
+          nmap <F2> ]c
+          " previous diff:
+          nmap <F3> [c
+          " alternative ('n' already used for 'nnn'):
+          " let mapleader = ","
+          " nmap <Leader>c :normal ]c<CR>
+          " nmap <Leader>p :normal [c<CR>
+
+    - name: VIM config - undotree - user
+      tags: vimrc
+      become: true
+      become_user: "{{ ansible_facts['env']['USER'] }}"
+      ansible.builtin.blockinfile:
+        path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
+        backup: true
+        create: true
+        mode: "0644"
+        marker: '" ### {mark} - undotree - ANSIBLE MANAGED BLOCK ###'
+        block: |
+          nnoremap <F5> :UndotreeToggle<CR>
+
+          if has("persistent_undo")
+            let target_path = expand('~/.vimundodir')
+
+              " create the directory and any parent directories
+              " if the location does not exist.
+              if !isdirectory(target_path)
+                  call mkdir(target_path, "p", 0700)
+              endif
+
+              let &undodir=target_path
+              " not activating undo generally, so commentet out next line:
+              " set undofile
+          endif
+
+    - name: VIM config - vimdiff - root
+      tags: vimrc
+      become: true
+      ansible.builtin.blockinfile:
+        path: "/root/.vimrc"
+        backup: true
+        create: true
+        mode: "0644"
+        marker: '" ### {mark} - vimdiff - ANSIBLE MANAGED BLOCK ###'
+        block: |
+          " shortcuts for vimdiff navigation
+          " next diff:
+          nmap <F2> ]c
+          " previous diff:
+          nmap <F3> [c
+          " alternative ('n' already used for 'nnn'):
+          " let mapleader = ","
+          " nmap <Leader>c :normal ]c<CR>
+          " nmap <Leader>p :normal [c<CR>

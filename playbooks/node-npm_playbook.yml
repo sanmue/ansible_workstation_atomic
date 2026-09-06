@@ -1,0 +1,27 @@
+---
+
+- name: Node - npm
+  hosts: localhost
+  connection: local
+  tasks:
+    # node, including npm, was installed via mise install in mise-node_playbook.yml
+
+    # eg.: export PATH=~/.local/share/mise/installs/node/latest/bin:$PATH
+    # or: PATH=~/.local/share/mise/installs/node/<node-version>/bin
+    - name: Node - Get npm path
+      ansible.builtin.shell: |
+        eval "$(mise activate bash)"
+        dirname "$(which npm)"
+      register: npm_bin_dir
+      changed_when: false
+
+    # Task does not work, if npm can not be found (not in path)
+    - name: Node - Install packages via npm (env_user)
+      community.general.npm:
+        name: yaml-language-server
+        # global: true # requires root privileges
+        global: false
+        path: "{{ ansible_facts['env']['HOME'] }}"
+        state: present
+      environment:
+        PATH: "{{ npm_bin_dir.stdout }}:{{ ansible_facts['env']['PATH'] }}"

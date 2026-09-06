@@ -1,0 +1,37 @@
+---
+
+- name: Papirus icon theme
+  hosts: localhost
+  connection: local
+  vars:
+    icon_dir: "{{ ansible_facts['env']['HOME'] }}/.icons"
+    extra_themes: "Papirus-Dark Papirus-Light"
+    # destdir: 'DESTDIR="$HOME/.icons"'
+    # extra_themes: 'EXTRA_THEMES="Papirus-Dark Papirus-Light"'
+  tasks:
+    - name: Papirus icon theme - make sure target directory for icon theme exists
+      ansible.builtin.file:
+        path: "{{ icon_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Papirus icon theme - download install script
+      ansible.builtin.get_url:
+        url: https://git.io/papirus-icon-theme-install
+        dest: /tmp/papirus-icon-theme-install.sh
+        mode: '0755'
+
+    - name: Papirus icon theme - execute install script
+      ansible.builtin.command: /tmp/papirus-icon-theme-install.sh
+      # ansible.builtin.command: "{{ destdir }} {{ extra_themes }} /tmp/papirus-icon-theme-install.sh"
+      environment:
+        DESTDIR: "{{ icon_dir }}"
+        EXTRA_THEMES: "{{ extra_themes }}"
+      args:
+        creates: "{{ icon_dir }}/Papirus"
+        # creates: "{{ ansible_facts['env']['HOME'] }}/.icons/Papirus"
+      register: papirus_install
+      changed_when:
+        # - "'Done!' in papirus_install.stdout"
+        - papirus_install.rc == 0
+      failed_when: papirus_install.rc != 0

@@ -1,0 +1,49 @@
+---
+
+- name: Mise - python
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Mise - python - get and register Python version
+      ansible.builtin.shell: |
+        set -o pipefail
+        python --version 2>&1 | cut -d ' ' -f2
+      register: python_version
+      args:
+        executable: /bin/bash # Erzwingt Verwendung von Bash (Sicherstellung einer Shell mit Unterstützung von pipefail)
+      # vars:
+      #   python_cmd: "{% if ansible_facts['distribution'] == 'Archlinux' %}python{% else %}python3{% endif %}"
+      # ignore_errors: true
+      failed_when:
+        - python_version.rc != 0
+        - python_version.stdout == ""
+        # verhindert, dass Task bei "normalen" Fehlern (z. B. Python nicht installiert) sofort abbricht,
+        # aber trotzdem als fehlgeschlagen markiert, wenn etwas schief geht (z. B. Kommando nicht ausführbar)
+      changed_when: false
+
+    # - name: Mise - msg python version
+    #   ansible.builtin.debug:
+    #     var: python_version
+
+    - name: Mise - python - list installed Python versions
+      ansible.builtin.command: mise list python --json
+      register: installed_python_versions_json
+      changed_when: false
+      # no_log: true
+
+    - name: Mise - python - set installed Python versions
+      ansible.builtin.set_fact:
+        installed_python_versions: "{{ installed_python_versions_json.stdout | from_json | json_query('[].version') }}"
+
+    - name: Mise - install python version (env_user)
+      when: python_version.stdout not in installed_python_versions
+      ansible.builtin.shell: >
+        eval "$(mise activate bash)" && mise use --global "python@{{ python_version.stdout }}"
+      args:
+        executable: /bin/bash
+        # creates: "{{ ansible_facts['env']['HOME'] }}/.local/share/mise/installs/python/{{ python_version.stdout }}"
+        # creates: "{{ ansible_facts['env']['HOME'] }}/.local/share/mise/installs/python/{{ python_version.stdout }}"
+      register: mise_install_result
+      changed_when: mise_install_result.rc == 0
+      failed_when:
+        - mise_install_result.rc != 0

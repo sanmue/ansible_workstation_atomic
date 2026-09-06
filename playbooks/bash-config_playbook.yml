@@ -1,0 +1,373 @@
+---
+
+- name: Bash config
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Bash config - create bashrc file (env_user)
+      tags: shellrc
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        state: touch
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rw,g=r,o=r
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Bash config - Insert/Update additional paths and config - homebrew (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: true
+        marker: "### {mark} 'homebrew' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------------------------------------------
+          # homebrew
+          # -----------------------------------------------
+          # Prioritize system binaries to prevent brew overriding things like dbus
+          # See: https://github.com/ublue-os/brew/blob/54b30cc07d3211fca65ca5cc724e9812c8c79b77/system_files/usr/lib/systemd/system/brew-upgrade.service#L17-L22
+          if [[ $- == *i* && -z "${HOMEBREW_PREFIX:-}" && -d /home/linuxbrew/.linuxbrew && ! "$PATH" =~ "/home/linuxbrew.linuxbrew" ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv | grep -Ev '\bPATH=')"
+            HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}"
+            export PATH="${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin"
+          fi
+
+    - name: Bash config - Insert/Update additional paths and config - starship shell prompt (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: true
+        marker: "### {mark} 'starship shell prompt' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------------------------------------------
+          # starship shell prompt - init script + functions
+          # -----------------------------------------------
+          if command -v starship >/dev/null 2>&1; then
+            eval "$(starship init bash)"
+
+            function set_win_title(){
+              echo -ne "\033]0; $USER@$HOSTNAME:$PWD \007"
+            }
+
+            starship_precmd_user_func="set_win_title"
+          fi
+
+    - name: Bash config - additional EXPORTS (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: true
+        marker: "### {mark} 'additional EXPORTS' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------
+          # additional EXPORTS
+          # ------------------
+          # https://github.com/ChrisTitusTech/mybash/blob/main/.bashrc
+          # https://wiki.archlinux.org/title/Sudo#Colored_password_prompt
+          iatest=$(expr index "$-" i)
+
+          # Don't put duplicate lines in the history and do not add lines that start with a space
+          export HISTCONTROL=erasedups:ignoredups:ignorespace
+
+          # Check the window size after each command and, if necessary, update the values of LINES and COLUMNS
+          #shopt -s checkwinsize
+
+          # Causes bash to append to history instead of overwriting it so if you start a new terminal, you have old session history
+          shopt -s histappend
+          #PROMPT_COMMAND='history -a'
+
+          # Show full auto-completion list automatically on 1x tab, without double tab
+          if [[ $- == *i* ]]; then
+            bind "set show-all-if-ambiguous On"
+          fi
+
+          # Colored sudo password prompt
+          export SUDO_PROMPT="$(tput setaf 1 bold)[sudo]$(tput sgr0) password for $(tput setaf 6)%p$(tput sgr0): "
+
+    - name: Bash config - custom alias definitions (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'custom alias definitions' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------------
+          # custom alias definitions
+          # ------------------------
+
+          # KITTY - alias to be able to use kitty features when connecting to remote servers (e.g use tmux on remote server)
+          # alias kssh="kitty +kitten ssh" # kitty currently not installed
+
+          # grep
+          alias grep='grep --color=auto'
+
+          # ls -> eza oder exa - list directory contents
+          if command -v eza >/dev/null 2>&1; then
+              alias ls='eza --color=auto --icons --group --time-style=long-iso --group-directories-first'
+              # '--group' und '--time-style' nur bei '-l'; dann schon dabei
+          elif command -v exa >/dev/null 2>&1; then
+              alias ls='exa --color=auto --icons --group --time-style=long-iso --group-directories-first'
+              # '--group' und '--time-style' nur bei '-l'; dann schon dabei
+          else
+              alias ls='ls --color=auto'
+          fi
+
+          alias ll='ls -la --ignore-glob ..'  # show long listing of all except ".."
+          alias l='ls -la --ignore-glob .?*'  # show long listing but no hidden dotfiles except "." (rekursiv bis 1. Unterverzeichnis, mit dessen Inhalt)
+          # tree-view:
+          alias lst='ls --tree'           # lst = ls tree
+          alias lstl='lst --long'         # lstl = ls tree long
+          alias lstla='lstl --all'        # lstla = ls tree long all
+          alias lstlale='lstla --level'   # lstlale = ls tree long all level   # Aufruf: lstlale 3 (entspricht: ls --tree --long --all --level 3 )
+          alias lstle='lst --level'       # lstle = ls tree level              # Aufruf: lstle 3   (entspricht: ls --tree --level 3)
+
+          # lsblk - list block devices
+          alias lsblku='lsblk -o NAME,MAJ:MIN,UUID,RM,SIZE,FSTYPE,RO,TYPE,MOUNTPOINTS' # u.a. mit UUID und FSTYPE
+          alias lsblkf='lsblk --fs --paths' # u.a. mit: filesystem info, UUID und full device paths
+
+          # cat -> bat # concatenate files and print on the standard output
+          if command -v bat >/dev/null 2>&1; then
+              alias cat='bat --plain' # --force-colorization
+              alias catp='cat --paging=never' # --force-colorization
+              alias catn='bat --number' # --force-colorization
+              alias catf='bat --style="full"' # --force-colorization
+          fi
+
+    - name: Bash config - custom alias definitions - mount pCloud (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'mount pCloud' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------------------
+          # mount pCloud via rclone
+          # -----------------------
+          if [[ -f "${HOME}/.local/bin/rclone_pCloud-Mnt.sh" ]]; then
+            alias pcloudmnt='${HOME}/.local/bin/rclone_pCloud-Mnt.sh'
+          fi
+
+    - name: Bash config - custom alias definitions - pip install or upgrade modules in requirements.txt (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'pip - requirements.txt' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # --------------------------------------------------------
+          # pip install/upgrade modules in requirements.txt (--user)
+          # --------------------------------------------------------
+          # find all requirements.txt files in ansible_workstation_atomic folders and install or upgrade them
+          if command -v pip >/dev/null 2>&1; then
+            alias piprin='find $HOME -path "$HOME/*ansible_workstation_atomic/*" -type f -name "requirements.txt" -exec pip install --user -r {} \;'
+            alias piprup='find $HOME -path "$HOME/*ansible_workstation_atomic/*" -type f \
+              -name "requirements.txt" -exec pip install --upgrade --force-reinstall --user -r {} \;'
+          fi
+
+    - name: Bash config - custom alias definitions - direnv for uv init (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'direnv for uv init' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------
+          # direnv for uv init
+          # ------------------
+          # if 'direnv' and 'uv' are installed, create a .envrc file containing/adding 'layout uv'
+          if command -v direnv >/dev/null 2>&1 && command -v uv >/dev/null 2>&1; then
+            alias direnvuv='if [[ ! -f .envrc ]]; then touch .envrc; direnv allow; fi; grep -q "^layout uv$" .envrc || echo "layout uv" >> .envrc'
+          fi
+
+    - name: Bash config - custom alias definitions - tasks of ansible playbook using 'tags' (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'ansible playbook tags' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------------------------------
+          # execute selected tasks of ansible playbook using 'tags'
+          # -------------------------------------------------------
+          if [[ -f "${HOME}/.local/bin/ansible_update-by-tag.sh" ]]; then
+            # - `nnnplugs`: create / update 'nnn' plugins + xterm conf for nnn-peview-tui
+            if command -v nnn >/dev/null 2>&1; then
+              alias upnnnplugs='${HOME}/.local/bin/ansible_update-by-tag.sh nnnplugs'
+            fi
+            # - `shellrc`: create / update shell conf (e.g. .bashrc, .zshrc)
+            alias upshellrc='${HOME}/.local/bin/ansible_update-by-tag.sh shellrc'
+            # - `vicinae` (desktop launcher): extensions update + conf
+            if command -v vicinae >/dev/null 2>&1; then
+              alias upvic='${HOME}/.local/bin/ansible_update-by-tag.sh upvic'
+            fi
+            # - `vimrc`: create / update vim conf + plugins
+            if command -v vim >/dev/null 2>&1; then
+              alias upvimrc='${HOME}/.local/bin/ansible_update-by-tag.sh vimrc'
+            fi
+          fi
+
+    - name: Bash config - custom alias definitions - 'zoxide' (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'zoxide' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------
+          # zoxide ('cd' replacement)
+          # -------------------------
+          # - zoxide - A smarter cd command for your terminal
+          # - see alsof further below: "Bash config - Insert/Update additional paths and config - zoxide"
+          if command -v zoxide >/dev/null 2>&1; then
+            alias cd='z'
+            if command -v fzf >/dev/null 2>&1; then
+              alias cdi='zi' # cd with interactive selection (using fzf)
+            fi
+          fi
+
+    - name: Bash config - custom alias definitions - 'clamdscan' (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'clamdscan' - ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ---------
+          # clamdscan
+          # ---------
+          if command -v clamdscan >/dev/null 2>&1; then
+            alias clamdscan='clamdscan --multiscan --infected --move=$HOME/.clamav/quarantine'
+          fi
+
+    - name: Bash config - Insert/Update additional paths and config - default editor (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'vim' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------------------
+          # vim als Standard Editor setzen
+          # -------------------------------
+          if command -v vim >/dev/null 2>&1; then
+            export VISUAL=vim
+            export EDITOR="${VISUAL}"
+            export SUDO_EDITOR=rvim
+          fi
+
+    - name: Bash config - Insert/Update additional paths and config - user-bin (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'user-bin' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------------------
+          # Benutzer-bin Verzeichnis an PATH anhaengen:
+          # -------------------------------------------
+          if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+            export PATH="$HOME/.local/bin:$PATH"
+          fi
+
+    - name: Bash config - Insert/Update additional paths and config - mise (User,all)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'mise' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ----
+          # mise
+          # ----
+          if command -v mise >/dev/null 2>&1; then
+            eval "$(mise activate bash)"
+          fi
+
+    - name: Bash config - Insert/Update additional paths and config - uv (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'uv' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------
+          # uv - shell autocompletion
+          # -------------------------
+          if command -v uv >/dev/null 2>&1; then
+            eval "$(uv generate-shell-completion bash)"
+            eval "$(uvx --generate-shell-completion bash)"
+          fi
+
+    - name: Bash config - Insert/Update additional paths and config - zoxide (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'zoxide' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------
+          # zoxide
+          # ------
+          # - do AFTER init of 'starship'
+          # - see also further above: "Bash config - custom alias definitions - 'zoxide'"
+          if command -v zoxide >/dev/null 2>&1; then
+            eval "$(zoxide init bash)"
+          fi
+
+    - name: Bash config - Insert/Update additional paths and config - SSHClick (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'SSHClick' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------
+          # SSHClick - shell autocompletion
+          # -------------------------------
+          if command -v sshc >/dev/null 2>&1; then
+            eval "$(_SSHC_COMPLETE=bash_source sshc)"
+          fi
+
+    # https://wiki.archlinux.org/title/Systemd/User#PATH
+    - name: Bash config - systemd user import-environment (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'systemd user' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -------------------------------
+          # systemd user import-environment
+          # -------------------------------
+          systemctl --user import-environment PATH
+
+    # https://github.com/direnv/direnv/blob/master/docs/hook.md
+    - name: Bash config - direnv hook (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'direnv hook' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # -----------
+          # direnv hook
+          # -----------
+          if command -v direnv >/dev/null 2>&1; then
+            eval "$(direnv hook bash)"
+          fi
+
+    # https://docs.atuin.sh/latest/guide/installation/#installing-the-binary
+    - name: Bash config - atuin (env_user)
+      tags: shellrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        backup: false
+        marker: "### {mark} 'atuin' ANSIBLE MANAGED BLOCK ###"
+        block: |
+          # ------------------------------
+          # atuin - improved shell history
+          # ------------------------------
+          if command -v atuin >/dev/null 2>&1; then
+            eval "$(atuin init bash)"
+          fi

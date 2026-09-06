@@ -1,0 +1,62 @@
+# ### pip install ... --user
+
+# ### ---
+# ### pip
+pip3-autoremove
+
+# ### --------
+# ### ansible
+# ansible
+ansible-core
+ansible-creator
+# ansible-compat # Ansible compatibility library for testing and development / contains functions that facilitate working with various versions of Ansible.
+# ansible-dev-tools # Ansible Developtment Tools kit bundles all tools needed for content creation and testing.
+ansible-navigator # prerquisite: container engine (podman, docker) for execution environment support
+ansible-vault
+
+# ### ------
+# ### python
+cst-lsp # für zed-python-refactoring
+flake8 # vim-ale optionally requires flake8: for python support # Python linter # -> ruff
+html5lib
+# isort # -> ruff
+# jedi
+# jedi-language-server # autocompletion for python
+jmespath # community.general.json_query: to be able to run json_query filter
+jupyter # Jupyter metapackage: notebook jupyterlab ipython ipykernel jupyter-console nbconvert ipywidgets
+lxml
+packaging # Requirement for ansible community.general.pipx module
+pandas[excel,html,sql-other,mysql,output-formatting,performance,plot,xml]
+# pipenv
+psutil
+pyarrow
+# PyGObject # for ansible community.general.dconf module - optional requirement, may become non-optional in the future
+# pylintq
+# pylint-venv
+# pyright # für VS Code: Pylance - Extension ? # Zed Editor mit Ext zed-python-refactoring (+ cst-lsp)
+pytest # wg. Abhöngigkeit von pytest-embedded (# via uv tool ...)
+python-lsp-server[all]
+# ruff # Python linter and code formatter # via uv tool ...
+
+# ### ----------------------
+# ### bash
+tree-sitter-bash # Bash for Zed
+
+# ### ----------------------
+# ### docker
+tree-sitter-dockerfile # Dockerfile Zed Extension
+
+# ### ----------------------
+# ### Hugo - static site generator
+docutils # required for reStructuredText support
+
+# ### ----------------------
+# ### YAML
+# tree-sitter-yaml
+yamllint
+
+# ### ------------------------
+# ### SSH Click Config manager
+# - https://github.com/karlot/sshclick#installation-procedure
+sshclick
+

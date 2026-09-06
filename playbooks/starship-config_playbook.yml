@@ -1,0 +1,13 @@
+---
+
+- name: Starship config
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Starship config - download starship.toml from Gist (env_user)
+      tags: shellrc
+      ansible.builtin.get_url:
+        url: https://gist.githubusercontent.com/sanmue/71eb35991107cf691336bfbf60c96b9f/raw/starship.toml
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/starship.toml"
+        mode: '0644'
+        backup: true

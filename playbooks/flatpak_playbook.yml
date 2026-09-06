@@ -1,0 +1,115 @@
+---
+
+- name: Install GUI apps
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Install GUI apps (flatpak, system)
+    # - name: Install GUI apps (flatpak, user)
+      community.general.flatpak:
+        # method: user # Fedora Cosmic Atomic: flatpak preinstalled, only "user"
+        name:
+          - "net.ankiweb.Anki" # Powerful, intelligent flash cards
+          - "com.belmoussaoui.Authenticator" # Generate two-factor codes
+          - "io.github.kolunmi.Bazaar" # Flatpak App Store # worsk only with system flatpak
+          # - "org.bleachbit.BleachBit" # Free space and maintain privacy
+          - "com.brave.Browser"
+          - "com.calibre_ebook.calibre" # The one stop solution to all your e-book needs
+          - "io.github.celluloid_player.Celluloid" # Plays videos
+          - "org.chromium.Chromium"
+          # - "io.github.linx_systems.ClamUI" # GUI for ClamAV
+          - "de.leopoldluley.Clapgrep" # One app to search through all your files (incl. PDF, Office, ...)
+          # - "org.cockpit_project.CockpitClient" # provides a graphical interface to your servers, containers, and virtual machines
+          # - "com.visualstudio.code" # alredy integrated in devmode # Code editing. Redefined.
+          - "org.cryptomator.Cryptomator" # Encryption for your cloud made easy
+          - "org.gnome.Decibels" # audio player that just plays audio files
+          - "com.belmoussaoui.Decoder" # Scan and generate QR codes
+          - "org.kde.digikam" # Photo Management
+          - "com.discordapp.Discord" # Talk, play, hang out
+          - "com.ranfdev.DistroShelf" # graphical interface for managing Distrobox containers on Linux
+          - "org.kde.dolphin" # KDE's file manager
+          - "com.jgraph.drawio.desktop" # diagramming tool
+          - "me.iepure.devtoolbox" # Dev tools at your fingertips
+          - "com.microsoft.Edge" # Microsoft Edge web browser
+          - "io.github.getnf.embellish" # managing Nerd Fonts
+          - "org.gnome.Epiphany" # Web # GNOME Project
+          - "com.mattjakeman.ExtensionManager" # Gnome Extensions
+          - "com.github.finefindus.eyedropper" # Color picker # Pick and format colors from screen
+          # - "org.ferdium.Ferdium" # Messenger for the desktop - based on Franz
+          # - "org.mozilla.firefox"
+          - "org.gnome.Firmware" # Install firmware on devices
+          - "com.github.tchx84.Flatseal" # Manage Flatpak permissions
+          - "one.ablaze.floorp" # Customizable Firefox-based browser from Japan
+          - "com.github.johnfactotum.Foliate" # Read e-books in style
+          - "nl.hjdskes.gcolor3" # Color Picker
+          - "it.mijorus.gearlever" # Manage AppImages
+          - "org.gnome.gedit" # Text editor
+          - "org.gimp.GIMP" # High-end image creation and manipulation
+          - "be.alexandervanhee.gradia" # Annotate your screenshots
+          # - "org.gtkhash.gtkhash" # Calculate message digests or checksums
+          - "io.github.pleromix.IceBox" # PDF Maker
+          - "io.github.flattool.Ignition" # add, remove, and modify startup entries
+          - "io.gitlab.adhami3310.Impression" # create bootable disk drives
+          - "org.inkscape.Inkscape" # Vector Graphics Editor
+          - "de.willuhn.Jameica" # Application-Platform similar to OSGI
+          - "net.cozic.joplin_desktop" # open source note taking and to-do application
+          - "org.kde.kasts" # Podcast application
+          - "org.keepassxc.KeePassXC" # Secure and Full-featured Password Manager
+          - "org.libreoffice.LibreOffice" # The LibreOffice productivity suite
+          - "org.localsend.localsend_app" # Share files to nearby deviced
+          - "de.mediathekview.MediathekView" # Access public German TV Mediatheken
+          - "io.github.nacho.mundi" # Learn geography
+          - "org.kde.kmines" # Minesweeper-like Game
+          - "io.missioncenter.MissionCenter" # Monitor system resource usage
+          - "io.mpv.Mpv" # cross-platform media player
+          - "com.nextcloud.desktopclient.nextcloud" # Sync and collaborate on your desktop or laptop
+          - "org.gnome.Solanum" # time tracking app using the pomodoro technique
+          - "com.obsproject.Studio" # OBS Studio # Live stream and record videos
+          - "com.github.jeromerobert.pdfarranger"
+          - "org.gnome.World.PikaBackup"
+          - "com.github.PintaProject.Pinta" # image editing, drawing and painting application with a simple yet powerful interface
+          - "io.podman_desktop.PodmanDesktop" # Manage Podman and other container engines from a single UI
+          - "io.github.zarestia_dev.rclone-manager"
+          # - "org.remmina.Remmina" # Remote Desktop Client
+          - "org.gnome.Rhythmbox3" # Play and organize all your music
+          - "io.github.vikdevelop.SaveDesktop" # Save your desktop configuration
+          - "org.gnome.seahorse.Application" # Manage your passwords and encryption keys
+          - "de.haeckerfelix.Shortwave" # Listen to internet radio
+          - "org.signal.Signal" # Private messenger
+          - "it.mijorus.smile" # emoji picker
+          - "io.github.pwr_solaar.solaar" # Linux manager for Logitech keyboards, mice, and trackpads
+          # - "net.mkiol.SpeechNote" # Notes with offline Speech to Text, Text to Speech and Machine Translation
+          - "org.sqlitebrowser.sqlitebrowser" # light GUI editor for SQLite databases
+          - "io.github.mfat.sshpilot" # Manage your servers with ease
+          - "com.valvesoftware.Steam" # Launcher for the Steam software distribution service
+          - "org.gnome.Sudoku"
+          - "io.github.plrigaux.sysd-manager" # application to manage systemd's units
+          - "org.tenacityaudio.Tenacity" # Audacity fork / replacement
+          - "org.torproject.torbrowser-launcher" # A program to help you download, keep updated, and run Tor Browser
+          - "com.transmissionbt.Transmission" # Download and share files over BitTorrent
+          - "org.videolan.VLC" # VLC media player, the open-source multimedia player
+          # - "org.virt_manager.virt-manager" # already integrated (via rpm)
+          - "com.borgbase.Vorta" # Backup client # integrates the mighty BorgBackup with your desktop environment
+          - "io.github.flattool.Warehouse" # control complex Flatpak options
+          - "org.wireshark.Wireshark" # Network protocol analyzer (without capture support) # only GUI # cli tools (e.g. tshark) via brew "wireshark"
+          # - "dev.zed.Zed" # High-performance code editor # via install script
+
+    - name: Install GUI apps (flatpak, system, gnome)
+    # - name: Install GUI apps (flatpak, user, gnome)
+      community.general.flatpak:
+        # method: user
+        name:
+          - "ca.desrt.dconf-editor" # A graphical tool for editing the dconf database (GNOME)
+          - "page.tesk.Refine" # Tweak various aspects of GNOME
+      when:
+        - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
+
+    - name: Remove preinstalled GUI apps (flatpak, system)
+    # - name: Remove preinstalled GUI apps (flatpak, user)
+      community.general.flatpak:
+        # method: user
+        name:
+          - "org.gnome.Calendar"
+          - "org.gnome.Contacts"
+          - "org.gnome.DejaDup"
+        state: absent
