@@ -85,6 +85,8 @@
           - "org.gnome.Sudoku"
           - "io.github.plrigaux.sysd-manager" # application to manage systemd's units
           - "org.tenacityaudio.Tenacity" # Audacity fork / replacement
+          # - "org.mozilla.thunderbird" # free and open source email, newsfeed, chat, and calendaring client
+          - "org.mozilla.thunderbird_esr" # free and open source email, newsfeed, chat, and calendaring client
           - "org.torproject.torbrowser-launcher" # A program to help you download, keep updated, and run Tor Browser
           - "com.transmissionbt.Transmission" # Download and share files over BitTorrent
           - "org.videolan.VLC" # VLC media player, the open-source multimedia player

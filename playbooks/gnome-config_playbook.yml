@@ -134,6 +134,7 @@
           - org.chromium.Chromium.desktop
           - org.gnome.Epiphany.desktop
           - org.mozilla.Thunderbird.desktop
+          - org.mozilla.thunderbird_esr.desktop
           - com.mitchellh.ghostty.desktop
           - org.gnome.Ptyxis.desktop
           - nemo.desktop
