@@ -10,7 +10,11 @@
       become_user: "{{ ansible_facts['env']['USER'] }}"
       ansible.builtin.blockinfile:
         path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
+        create: true
         backup: true
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
+        mode: u=rw,g=r,o=r
         marker: '" ### {mark} - general - ANSIBLE MANAGED BLOCK ###'
         block: |
           set nocompatible      " Do not work in VI compatible mode, use extended VIM functionality
@@ -68,8 +72,6 @@
       ansible.builtin.blockinfile:
         path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
         backup: true
-        create: true
-        mode: "0644"
         marker: '" ### {mark} - undotree - ANSIBLE MANAGED BLOCK ###'
         block: |
           nnoremap <F5> :UndotreeToggle<CR>
