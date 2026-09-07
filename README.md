@@ -8,14 +8,14 @@ Fedora Silverblue
 
 - <https://fedoraproject.org/atomic-desktops/silverblue/>
 
-Project Bluefin
+Bluefin
 
 - <https://projectbluefin.io/>
 
 ## Usage
 
 - boot to desktop environment + login
-  - Bluefin OS: enable Developer Mode (<https://docs.projectbluefin.io/bluefin-dx/#step-1-turn-it-on>)
+  - Bluefin: enable Developer Mode (<https://docs.projectbluefin.io/bluefin-dx/#step-1-turn-it-on>)
 - clone this repo to the home directory of the current user
   - `cd $HOME`
   - `git clone https://gitlab.com/sanmue/ansible_workstation_atomic.git`
