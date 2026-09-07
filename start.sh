@@ -119,7 +119,10 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
 
     if command -v virsh && [[ -f "${STARTSCRIPT_REBOOT_FLAG}" ]]; then
         echo -e "\n- start and enable libvirtd.service"
-        sudo systemctl enable --now libvirtd.service
+        if ! systemctl is-enabled --quiet libvirtd.service; then
+            sudo systemctl enable libvirtd.service
+        fi
+
         if ! groups "$USER" | grep -q '\blibvirt\b'; then
             echo -e "\n- adding current user '$USER' to 'libvirt' group"
             grep -E '^libvirt:' /usr/lib/group | sudo tee -a /etc/group && sudo usermod -aG libvirt "$USER"
