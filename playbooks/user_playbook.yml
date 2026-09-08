@@ -19,7 +19,6 @@
         # groups: wheel,dialout,docker,incus-admin,libvirt,clamav
         groups: wheel
         append: true
-        # password: "{{ 'InitPW:-)' | password_hash('sha512') }}"
         password: "{{ user_password | password_hash('sha512') }}" # "user_password" encrypted in ../inventory/group_vars/vault.yml
 
     # default "/etc/shadow": root:!::0:99999:7:::
@@ -42,65 +41,71 @@
 
     # ### CHECK
 
-    - name: User - Check if docker is available
-      ansible.builtin.command: command -v docker
-      register: docker_check
+    - name: User - Check docker group
+      ansible.builtin.getent:
+        database: group
+        key: docker
+      register: docker_group
       changed_when: false
       failed_when: false  # Task wird nie als fehlgeschlagen markiert (bleibt "grün")
                           # echter Return-Code (z.B. 127 für "command not found", oder 1, ...) wird in "docker_check" gespeichert
-      # ignore_errors: true # hier wäre die ausgabe "rot", würde aber (einfach/ebenfalls) weiterlaufen
+      # ignore_errors: true # damit wäre die Ausgabe "rot", würde aber (einfach/ebenfalls) weiterlaufen
 
-    - name: User - Check if incus is available
-      ansible.builtin.command: command -v incus
-      register: incus_check
+    - name: User - Check incus-admin group
+      ansible.builtin.getent:
+        database: group
+        key: incus-admin
+      register: incus_admin_group
       changed_when: false
       failed_when: false
-      # ignore_errors: true
 
-    - name: User - Check if virsh is available
-      ansible.builtin.command: command -v virsh
-      register: virsh_check
+    - name: User - Check libvirt group
+      ansible.builtin.getent:
+        database: group
+        key: libvirt
+      register: libvirt_group
       changed_when: false
       failed_when: false
-      # ignore_errors: true
 
-    - name: User - Check if clamd is available
-      ansible.builtin.command: command -v clamd
-      register: clamd_check
+    - name: User - Check clamav group
+      ansible.builtin.getent:
+        database: group
+        key: clamav
+      register: clamav_group
       changed_when: false
       failed_when: false
-      # ignore_errors: true
 
-      # ### ADD
+    # ### ADD to group(s)
 
-    - name: User - Add R2D2 to docker group if docker exists in PATH
+    - name: User - Add R2D2 to docker group
       become: true
       ansible.builtin.user:
         name: "R2D2"
         groups: docker
         append: true
-      when: docker_check.rc == 0
+      when: "'docker' in docker_group.ansible_facts.getent_group"
+      # when: docker_group.ansible_facts.getent_group.docker is defined
 
-    - name: User - Add R2D2 to incus-admin group if incus exists in PATH
+    - name: User - Add R2D2 to incus-admin group
       become: true
       ansible.builtin.user:
         name: "R2D2"
         groups: incus-admin
         append: true
-      when: incus_check.rc == 0
+      when: "'incus-admin' in incus_admin_group.ansible_facts.getent_group"
 
-    - name: User - Add R2D2 to libvirt group if virsh exists in PATH
+    - name: User - Add R2D2 to libvirt group
       become: true
       ansible.builtin.user:
         name: "R2D2"
         groups: libvirt
         append: true
-      when: virsh_check.rc == 0
+      when: "'libvirt' in libvirt_group.ansible_facts.getent_group"
 
-    - name: User - Add R2D2 to clamav group if clamd exists in PATH
+    - name: User - Add R2D2 to clamav group
       become: true
       ansible.builtin.user:
         name: "R2D2"
         groups: clamav
         append: true
-      when: clamd_check.rc == 0
+      when: "'clamav' in clamav_group.ansible_facts.getent_group"
