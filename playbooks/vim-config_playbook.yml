@@ -4,17 +4,21 @@
   hosts: localhost
   connection: local
   tasks:
-    - name: VIM config - general - user
+    - name: VIM config - create vimrc file (user)
       tags: vimrc
-      become: true
-      become_user: "{{ ansible_facts['env']['USER'] }}"
-      ansible.builtin.blockinfile:
+      ansible.builtin.file:
         path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
-        create: true
-        backup: true
         owner: "{{ ansible_facts['env']['USER'] }}"
         group: "{{ ansible_facts['env']['USER'] }}"
         mode: u=rw,g=r,o=r
+        state: touch
+        modification_time: preserve
+
+    - name: VIM config - general - user
+      tags: vimrc
+      ansible.builtin.blockinfile:
+        path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
+        backup: true
         marker: '" ### {mark} - general - ANSIBLE MANAGED BLOCK ###'
         block: |
           set nocompatible      " Do not work in VI compatible mode, use extended VIM functionality
@@ -47,12 +51,8 @@
 
     - name: VIM config - vimdiff - user
       tags: vimrc
-      become: true
-      become_user: "{{ ansible_facts['env']['USER'] }}"
       ansible.builtin.blockinfile:
         path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
-        create: true
-        mode: "0644"
         marker: '" ### {mark} - vimdiff - ANSIBLE MANAGED BLOCK ###'
         block: |
           " shortcuts for vimdiff navigation
@@ -67,8 +67,6 @@
 
     - name: VIM config - undotree - user
       tags: vimrc
-      become: true
-      become_user: "{{ ansible_facts['env']['USER'] }}"
       ansible.builtin.blockinfile:
         path: "/home/{{ ansible_facts['env']['USER'] }}/.vimrc"
         backup: true
@@ -89,6 +87,10 @@
               " not activating undo generally, so commentet out next line:
               " set undofile
           endif
+
+    # --------
+    # --- root
+    # --------
 
     - name: VIM config - vimdiff - root
       tags: vimrc
