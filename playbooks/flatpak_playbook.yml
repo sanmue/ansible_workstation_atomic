@@ -5,6 +5,7 @@
   connection: local
   tasks:
     - name: Install GUI apps - add flathub flatpak repository remote (system)
+      become: true
       community.general.flatpak_remote:
         name: flathub
         state: present
