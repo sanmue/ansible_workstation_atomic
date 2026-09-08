@@ -1,0 +1,10 @@
+- name: Flatpak - remote config
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Flatpak - remote config - add flathub flatpak repository remote (system)
+      become: true
+      community.general.flatpak_remote:
+        name: flathub
+        state: present
+        flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo

@@ -28,8 +28,11 @@
 - ansible.builtin.import_playbook: playbooks/zsh-config_playbook.yml # noqa name[play]
 
 # ### GUI apps
+# - preliminary config
+- ansible.builtin.import_playbook: playbooks/flatpak-remote-config_playbook.yml # noqa name[play]
+
 # - install
-- ansible.builtin.import_playbook: playbooks/flatpak_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/flatpak-apps_playbook.yml # noqa name[play]
 # waiting for stable version # - ansible.builtin.import_playbook: playbooks/vicinae_playbook.yml # noqa name[play]
 - ansible.builtin.import_playbook: playbooks/zed_playbook.yml # noqa name[play]
 

@@ -1,19 +1,12 @@
 ---
 
-- name: Install GUI apps
+# Fedora Cosmic Atomic: flatpak installed for user -> method: user
+
+- name: Flatpak - GUI apps
   hosts: localhost
   connection: local
   tasks:
-    - name: Install GUI apps - add flathub flatpak repository remote (system)
-      become: true
-      community.general.flatpak_remote:
-        name: flathub
-        state: present
-        flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
-
-    # Fedora Cosmic Atomic: flatpak preinstalled for user -> method: user
-
-    - name: Install GUI apps (flatpak, system)
+    - name: Flatpak - apps - install (system)
       community.general.flatpak:
         name:
           - "net.ankiweb.Anki" # Powerful, intelligent flash cards
@@ -103,7 +96,7 @@
           - "org.wireshark.Wireshark" # Network protocol analyzer (without capture support) # only GUI # cli tools (e.g. tshark) via brew "wireshark"
           # - "dev.zed.Zed" # High-performance code editor # via install script
 
-    - name: Install GUI apps (flatpak, system, gnome)
+    - name: Flatpak - apps - install (system, gnome)
       community.general.flatpak:
         name:
           - "ca.desrt.dconf-editor" # A graphical tool for editing the dconf database (GNOME)
@@ -111,7 +104,7 @@
       when:
         - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
 
-    - name: Remove preinstalled GUI apps (flatpak, system)
+    - name: Flatpak - apps - remove preinstalled apps (system)
       community.general.flatpak:
         name:
           - "org.gnome.Calendar"
