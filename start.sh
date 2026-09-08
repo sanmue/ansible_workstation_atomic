@@ -110,7 +110,7 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
         echo "* REBOOT *"
         echo "**********"
         
-        echo -e "\n!!! Reboot needed, press any key to reboot the system. Start this script afterwards again !!!"
+        echo -e "\n!!! Reboot needed, press ENTER to reboot the system. Start this script after reboot again !!!"
         touch "${STARTSCRIPT_REBOOT_FLAG}"
         read -r
         systemctl reboot
@@ -129,7 +129,7 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
         
             # -------------------------------------------------------------------------
             echo "**********"
-            echo -e "\n!!! Reboot needed, press any key to reboot the system. You must this start the script after the reboot again !!!"
+            echo -e "\n!!! Reboot needed, press ENTER to reboot the system. Start this script after reboot again !!!"
             read -r
             systemctl reboot
             # -------------------------------------------------------------------------
