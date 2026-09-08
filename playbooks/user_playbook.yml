@@ -4,7 +4,7 @@
   hosts: localhost
   connection: local
   tasks:
-    # encrypted vault.yml contains initial 'user_password' for user 'R2D2' (see below)
+    # encrypted vault.yml contains initial 'user_password' for new user
     - name: Include vars - inventory - group_vars
       ansible.builtin.include_vars:
         dir: ../inventory/group_vars

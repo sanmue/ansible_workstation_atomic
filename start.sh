@@ -15,6 +15,8 @@ python_version=$(python --version | cut -d' ' -f2)
 python_requirements="requirements.txt"
 ansible_requirements="requirements.yml"
 playbook="site.yml"
+playbook_vault_user="playbooks/user_playbook.yml"
+vault_password_file="${HOME}/.vault/ansibleVaultKey"
 os=$(grep -e "^NAME=" /etc/os-release | cut -d '"' -f 2 | xargs)
 # vaultpasswordfile="${HOME}/.vault/ansibleVaultKey" # 'vault_password_file' defined in 'ansible.cfg'
 PIP_INSTALL_FLAG="${HOME}/.ansible_python-pip-requirements_installed"
@@ -149,16 +151,32 @@ if [[ -e "${PLAYBOOK_FINISHED_FLAG}" ]]; then
     if [[ ! "${executePlaybook}" = "y" ]]; then executePlaybook="no"; fi
 fi
 
+playbook_error=0
 if [[ "${executePlaybook}" = "y" ]]; then
-    # 'vault_password_file' defined in 'ansible.cfg'
     if ansible-playbook "${playbook}" -vv -K; then
     #if ansible-playbook "${playbook}" --ask-vault-pass -vv -K; then
     #if ansible-playbook "${playbook}" -vv -K --vault-password-file="${vaultpasswordfile}"; then
-        echo "No error when executing playbook, creating flag file."
-        touch "${PLAYBOOK_FINISHED_FLAG}"
+        echo "Playbook '${playbook}' with its sub-playbooks finished."
     else
-        echo "Error when executing playbook."
+        playbook_error=1
+        echo "Error when executing playbook / sub-playbook of '${playbook}'."
     fi
+
+    # 'vault_password_file' defined in 'ansible.cfg'
+    if [[ -r "${vault_password_file}" ]] && [[ -r "${playbook_vault_user}" ]]; then
+        if ansible-playbook "${playbook_vault_user}" -vv -K; then
+            echo "Playbook '${playbook_vault_user}' finished."
+        else
+            echo "Error when executing playbook '${playbook_vault_user}'."
+            playbook_error=1
+        fi
+    else
+        echo "'${vault_password_file}' or playbook '${playbook_vault_user}' not found."
+        echo "Playbook '${playbook_vault_user}' needs '${vault_password_file}'."
+    fi
+
+    if [[ "${playbook_error}" -eq 0 ]]; then touch "${PLAYBOOK_FINISHED_FLAG}"; fi
+    # (( playbook_error == 0 )) && touch "${PLAYBOOK_FINISHED_FLAG}"
 fi
 
 echo -e "\n\e[0;33mScript finished.\e[0m"

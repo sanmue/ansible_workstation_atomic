@@ -56,4 +56,5 @@
     - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
 
 # ### USER
-- ansible.builtin.import_playbook: playbooks/user_playbook.yml # noqa name[play]
+# playbook called seperately in start.sh (since uses vault):
+# - ansible.builtin.import_playbook: playbooks/user_playbook.yml # noqa name[play]
