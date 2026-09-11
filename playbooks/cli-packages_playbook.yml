@@ -48,6 +48,7 @@
           - mise          # already installed # The front-end to your dev env
           - nnn           # - terminal file manager
           - nload         # - Monitors network traffic and bandwidth usage
+          - pass          # - the standard unix password manager
           # - powershell    # - cross-platform automation and configuration tool/framework
           #                 # Workaround: Docker-Container
           #                 # - <https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-in-docker>
