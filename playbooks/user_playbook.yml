@@ -20,6 +20,7 @@
         groups: wheel
         append: true
         password: "{{ user_password | password_hash('sha512') }}" # "user_password" encrypted in ../inventory/group_vars/vault.yml
+        update_password: on_create # only set the password for newly created users
 
     # default "/etc/shadow": root:!::0:99999:7:::
     # - ! -> password locked; no login via password possible, only ssh-key or sudo allowed
