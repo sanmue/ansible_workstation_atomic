@@ -94,8 +94,8 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
     if ! command -v virsh >/dev/null 2>&1; then
         echo "- installing virtualization packages"
         sudo rpm-ostree install virt-install libvirt-daemon libvirt-daemon-common libvirt-daemon-config-network libvirt-daemon-kvm \
-        libvirt-daemon-driver-qemu qemu-kvm   guestfs-tools   virt-manager virt-viewer \
-        cockpit-machines cockpit-networkmanager cockpit-ostree cockpit-podman cockpit-selinux cockpit-storaged cockpit-system
+        libvirt-daemon-driver-qemu qemu-kvm   guestfs-tools   virt-manager virt-viewer # \
+        # cockpit-machines cockpit-networkmanager cockpit-ostree cockpit-podman cockpit-selinux cockpit-storaged cockpit-system
     fi
 
     # Visual Studio Code # because of restrictions when installing as flatpak app
