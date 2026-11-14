@@ -34,6 +34,7 @@
 # - install
 - ansible.builtin.import_playbook: playbooks/flatpak-apps_playbook.yml # noqa name[play]
 # waiting for stable version # - ansible.builtin.import_playbook: playbooks/vicinae_playbook.yml # noqa name[play]
+- ansible.builtin.import_playbook: playbooks/vscode_playbook.yml # noqa name[play]
 - ansible.builtin.import_playbook: playbooks/zed_playbook.yml # noqa name[play]
 
 # - config

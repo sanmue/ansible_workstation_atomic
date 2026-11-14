@@ -1,0 +1,30 @@
+---
+
+- name: Visual Studio Code
+  hosts: localhost
+  connection: local
+  tasks:
+
+    - name: Visual Studio Code - install block (not bluefin-dx)
+      when:
+        - os_id != "bluefin"    # which means for: Bluefin Dakota, Fedora Silverblue
+      block:
+
+        - name: Visual Studio Code - add ublue-os homebrew tap
+          ansible.builtin.command:
+            cmd: /home/linuxbrew/.linuxbrew/bin/brew tap ublue-os/tap
+          register: brew_tap_ublue
+          changed_when: "'Tapped' in brew_tap_ublue.stdout"
+
+        - name: Visual Studio Code - trust ublue-os homebrew tap
+          ansible.builtin.command:
+            cmd: /home/linuxbrew/.linuxbrew/bin/brew trust ublue-os/tap
+          register: brew_trust_ublue
+          changed_when: "'Trusted' in brew_trust_ublue.stdout"
+
+        - name: Visual Studio Code - install
+          community.general.homebrew_cask:
+            name: ublue-os/tap/visual-studio-code-linux
+            state: present
+            # path: /home/linuxbrew/.linuxbrew/bin
+            update_homebrew: false
