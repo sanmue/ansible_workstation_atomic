@@ -73,22 +73,28 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
         echo "- installing gcc"
         sudo rpm-ostree install gcc # because homebrew is complaining
     fi
-    if ! command -v distrobox >/dev/null 2>&1; then
-        echo "- installing distrobox"
-        sudo rpm-ostree install distrobox # alternative to toolbx
-    fi
-    if ! command -v tmux >/dev/null 2>&1; then
-        echo "- installing tmux"
-        sudo rpm-ostree install tmux
-    fi
+
+    # will be installed via homerew in ansible playbook:
+    # if ! command -v distrobox >/dev/null 2>&1; then
+    #     echo "- installing distrobox"
+    #     sudo rpm-ostree install distrobox # alternative to toolbx
+    # fi
+    # will be installed via homerew in ansible playbook:
+    # if ! command -v tmux >/dev/null 2>&1; then
+    #     echo "- installing tmux"
+    #     sudo rpm-ostree install tmux
+    # fi
+
     if ! command -v vim >/dev/null 2>&1; then
-        echo "- installing vim"
+        echo "- installing vim"        # 'vim-minimal' integrated by default
         sudo rpm-ostree install vim
     fi
-    if ! command -v zsh >/dev/null 2>&1; then
-        echo "- installing zsh"
-        sudo rpm-ostree install zsh
-    fi
+
+    # will be installed via homerew in ansible playbook:
+    # if ! command -v zsh >/dev/null 2>&1; then
+    #     echo "- installing zsh"
+    #     sudo rpm-ostree install zsh
+    # fi
 
     # Virtualization
     if ! command -v virsh >/dev/null 2>&1; then
@@ -98,13 +104,14 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
         # cockpit-machines cockpit-networkmanager cockpit-ostree cockpit-podman cockpit-selinux cockpit-storaged cockpit-system
     fi
 
-    # Visual Studio Code # because of restrictions when installing as flatpak app
-    if ! command -v code >/dev/null 2>&1; then
-        echo "- installing Visual Studio Code"
-        curl -o /tmp/vscode.repo https://packages.microsoft.com/yumrepos/vscode/config.repo 
-        sudo install -o 0 -g 0 -m644 /tmp/vscode.repo /etc/yum.repos.d/vscode.repo
-        sudo rpm-ostree install code
-    fi
+    # will be installed via homerew in ansible playbook:
+    # # Visual Studio Code # because of restrictions when installing as flatpak app
+    # if ! command -v code >/dev/null 2>&1; then
+    #     echo "- installing Visual Studio Code"
+    #     curl -o /tmp/vscode.repo https://packages.microsoft.com/yumrepos/vscode/config.repo 
+    #     sudo install -o 0 -g 0 -m644 /tmp/vscode.repo /etc/yum.repos.d/vscode.repo
+    #     sudo rpm-ostree install code
+    # fi
 
     # -------------------------------------------------------------------------
     if [[ ! -f "${STARTSCRIPT_REBOOT_FLAG}" ]]; then
