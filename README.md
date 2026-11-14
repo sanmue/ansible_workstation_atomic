@@ -1,21 +1,26 @@
 # ansible_workstation_atomic
 
-Intall additional software and configure the system (Fedora Silverblue or Bluefin with Gnome Desktop Environment) in accordance with my requirements.
+Intall additional software and configure the system (Fedora Silverblue, Bluefin (classic), Bluefin Dakota; with Gnome Desktop Environment) in accordance with my requirements.
 
 ## Supported OS
 
-Fedora Silverblue
+### Fedora Silverblue
 
 - <https://fedoraproject.org/atomic-desktops/silverblue/>
 
-Bluefin
+### Bluefin
 
 - <https://projectbluefin.io/>
+- with developer mode enabled (<https://docs.projectbluefin.io/bluefin-dx/#step-1-turn-it-on>) and `ujust bluefin-cli`
+
+### Bluefin Daktoa
+
+- <https://projectbluefin.io/dakota/>
 
 ## Usage
 
 - boot to desktop environment + login
-  - Bluefin: enable Developer Mode (<https://docs.projectbluefin.io/bluefin-dx/#step-1-turn-it-on>)
+  - Bluefin: enable Developer Mode + bluefin-cli
 - clone this repo to the home directory of the current user
   - `cd $HOME`
   - `git clone https://gitlab.com/sanmue/ansible_workstation_atomic.git`
@@ -24,6 +29,8 @@ Bluefin
 - execute the initial bash script
   - `./start.sh`
   - script also starts ansible playbook `site.yml`
+- Bluefin Dakata (optional): setup virtualization
+  - `ujust setup-virtualization`
 
 ## Execute selected tasks of ansible playbook using 'tags'
 
