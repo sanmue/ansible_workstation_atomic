@@ -7,13 +7,14 @@
     - name: Ansible facts - read os-release - ID and VARIANT_ID
       ansible.builtin.shell: |
         . /etc/os-release
-        printf '%s\n' "$ID" "$VARIANT_ID"
+        printf '%s\n' "$ID" "${VARIANT_ID:-}"
       register: os_release
       changed_when: false
-      # ID: e.g.: bluefin, fedora
-      # VARIANT_ID: e.g.: bluefin-dx, silverblue
+      # ... "${VARIANT_ID:-}": ':-': if VARIANT_ID not set or empty -> use empty string
+      # e.g. ID: bluefin, bluefin-dakota, fedora
+      # e.g. VARIANT_ID: bluefin-dx, silverblue; (bluefin-dakota: VARIANT_ID not set -> empty string)
 
-    - name: Ansible facts - Set OS facts - ID and VARIANT_ID
+    - name: Ansible facts  Set OS facts - ID and VARIANT_ID
       ansible.builtin.set_fact:
         os_id: "{{ os_release.stdout_lines[0] }}"
-        os_variant_id: "{{ os_release.stdout_lines[1] }}"
+        os_variant_id: "{{ os_release.stdout_lines[1] | default('') }}"
