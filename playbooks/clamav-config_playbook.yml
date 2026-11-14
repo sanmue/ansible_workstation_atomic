@@ -322,7 +322,7 @@
           [Install]
           WantedBy=default.target
 
-    - name: ClamAV config - Systemd - reread configs (env_user)
+    - name: ClamAV config - Systemd - reread configs - for clamd (env_user)
       ansible.builtin.systemd_service:
         daemon_reload: true
         scope: user
@@ -357,7 +357,7 @@
           [Install]
           WantedBy=default.target
 
-    - name: ClamAV config - Systemd - reread configs (env_user)
+    - name: ClamAV config - Systemd - reread configs - for freshclam (env_user)
       ansible.builtin.systemd_service:
         daemon_reload: true
         scope: user
