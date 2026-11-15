@@ -122,6 +122,7 @@
   ansible.builtin.import_playbook: playbooks/gnome-ptyxis-config_playbook.yml
   when:
     - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
+    - os_id != "bluefin-dakota" # Dakota uses ghostty
 
 # ### USER ----------
 # Playbook called separately in start.sh (since it uses Vault):
