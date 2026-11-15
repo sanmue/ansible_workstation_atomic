@@ -22,7 +22,6 @@
           - fd            # Simple, fast and user-friendly alternative to find
           - gh            # GitHub command-line tool
           - glab          # Open-source GitLab command-line tool
-          - mise          # The front-end to your dev env
           - podman-tui    # Podman Terminal User Interface
           - ripgrep       # Search tool like grep and The Silver Searcher
           - tealdeer      # A fast tldr client in Rust
@@ -59,6 +58,8 @@
       community.general.homebrew:
         name:
           - 7zip              # 7-Zip is a file archiver with a high compression ratio
+          - mise          # The front-end to your dev env
+          - uv            # Python package installer and resolver written in Rust
           - wireguard-tools   # next generation secure network tunnel - tools for configuration
         state: present
 
@@ -84,7 +85,6 @@
           - shfmt         # Format shell programs
           - stress-ng     # Software to stress test a computer system in various selectable ways
           - syncthing     # Continuous Replication / Cluster Synchronization Thing
-          - uv            # Python package installer and resolver written in Rust
           - wireshark     # network analyzer and capture tool - without graphical user interface # only cli (e.g. tshark, editcap, capinfos, ...)
           - zsh-autocomplete              # Real-time type-ahead completion for Zsh
           - zsh-autosuggestions           # Fish-like autosuggestions for zsh
