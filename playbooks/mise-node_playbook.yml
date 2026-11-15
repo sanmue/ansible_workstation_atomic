@@ -1,3 +1,5 @@
+---
+
 - name: Mise - node
   hosts: localhost
   connection: local

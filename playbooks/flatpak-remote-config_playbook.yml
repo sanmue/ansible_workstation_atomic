@@ -1,3 +1,5 @@
+---
+
 - name: Flatpak - remote config
   hosts: localhost
   connection: local
