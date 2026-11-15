@@ -107,12 +107,3 @@
         # - vim-ale       # not available with brew # Lint Engine (plugin for vim) # Alternative: install from git repo
         # - wget          # already integrated # Network utility to retrieve files from the web
         # - zstd          # already integrated # Zstandard - Fast real-time compression algorithm
-
-    - name: Install cli packages - fonts - via homebrew (all)
-      community.general.homebrew:
-        name:
-          - font-adwaita-mono-nerd-font
-          - font-fira-code-nerd-font
-          - font-jetbrains-mono-nerd-font
-          - font-meslo-lg-nerd-font
-          - font-source-code-pro

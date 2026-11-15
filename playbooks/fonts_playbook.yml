@@ -1,0 +1,20 @@
+---
+
+- name: Install Fonts
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Install Fonts - via homebrew (all)
+      community.general.homebrew:
+        name:
+          # Office fonts:
+          - font-arial
+          - font-arial-black
+          - font-impact
+          # Other fonts:
+          - font-adwaita-mono-nerd-font
+          - font-dejavu
+          - font-fira-code-nerd-font
+          - font-jetbrains-mono-nerd-font
+          - font-meslo-lg-nerd-font
+          - font-ubuntu
