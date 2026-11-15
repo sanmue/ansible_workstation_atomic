@@ -1,65 +1,130 @@
 ---
 
-# ### Ansible
-- ansible.builtin.import_playbook: playbooks/ansible-facts_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/ansible-galaxy-collection_playbook.yml # noqa name[play]
+# ### Ansible ----------
 
-# ### CLI tools
+- name: Import Ansible facts playbook
+  ansible.builtin.import_playbook: playbooks/ansible-facts_playbook.yml
+
+- name: Import Ansible Galaxy collection playbook
+  ansible.builtin.import_playbook: playbooks/ansible-galaxy-collection_playbook.yml
+
+# ### CLI tools ----------
 # - install
-- ansible.builtin.import_playbook: playbooks/cli-packages_playbook.yml # noqa name[play]
 
-- ansible.builtin.import_playbook: playbooks/mise-node_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/mise-python_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/node-npm_playbook.yml # noqa name[play] # place after "mise-node_playbook.yml"
-- ansible.builtin.import_playbook: playbooks/nnn-plugins_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/vim-plugins_playbook.yml # noqa name[play]
+- name: Import CLI packages playbook
+  ansible.builtin.import_playbook: playbooks/cli-packages_playbook.yml
+
+- name: Import mise Node.js playbook
+  ansible.builtin.import_playbook: playbooks/mise-node_playbook.yml
+
+- name: Import mise Python playbook
+  ansible.builtin.import_playbook: playbooks/mise-python_playbook.yml
+
+# Must run after mise-node_playbook.yml
+- name: Import Node.js npm playbook
+  ansible.builtin.import_playbook: playbooks/node-npm_playbook.yml
+
+- name: Import nnn plugins playbook
+  ansible.builtin.import_playbook: playbooks/nnn-plugins_playbook.yml
+
+- name: Import Vim plugins playbook
+  ansible.builtin.import_playbook: playbooks/vim-plugins_playbook.yml
 
 # - config (including services)
-- ansible.builtin.import_playbook: playbooks/ansible-updateByTag-conf_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/clamav-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/direnv-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/rclone-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/starship-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/syncthing-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/uv-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/vim-config_playbook.yml # noqa name[play]
 
-- ansible.builtin.import_playbook: playbooks/bash-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/zsh-config_playbook.yml # noqa name[play]
+- name: Import Ansible update by tag configuration playbook
+  ansible.builtin.import_playbook: playbooks/ansible-updateByTag-conf_playbook.yml
 
-# ### Fonts
+- name: Import ClamAV configuration playbook
+  ansible.builtin.import_playbook: playbooks/clamav-config_playbook.yml
+
+- name: Import direnv configuration playbook
+  ansible.builtin.import_playbook: playbooks/direnv-config_playbook.yml
+
+- name: Import rclone configuration playbook
+  ansible.builtin.import_playbook: playbooks/rclone-config_playbook.yml
+
+- name: Import Starship configuration playbook
+  ansible.builtin.import_playbook: playbooks/starship-config_playbook.yml
+
+- name: Import Syncthing configuration playbook
+  ansible.builtin.import_playbook: playbooks/syncthing-config_playbook.yml
+
+- name: Import uv configuration playbook
+  ansible.builtin.import_playbook: playbooks/uv-config_playbook.yml
+
+- name: Import Vim configuration playbook
+  ansible.builtin.import_playbook: playbooks/vim-config_playbook.yml
+
+- name: Import Bash configuration playbook
+  ansible.builtin.import_playbook: playbooks/bash-config_playbook.yml
+
+- name: Import Zsh configuration playbook
+  ansible.builtin.import_playbook: playbooks/zsh-config_playbook.yml
+
+# ### Fonts ----------
 # - install
-- ansible.builtin.import_playbook: playbooks/fonts_playbook.yml # noqa name[play]
 
-# ### GUI apps
+- name: Import fonts playbook
+  ansible.builtin.import_playbook: playbooks/fonts_playbook.yml
+
+# ### GUI apps ----------
 # - preliminary config
-- ansible.builtin.import_playbook: playbooks/flatpak-remote-config_playbook.yml # noqa name[play]
+
+- name: Import Flatpak remote configuration playbook
+  ansible.builtin.import_playbook: playbooks/flatpak-remote-config_playbook.yml
 
 # - install
-- ansible.builtin.import_playbook: playbooks/flatpak-apps_playbook.yml # noqa name[play]
-# waiting for stable version # - ansible.builtin.import_playbook: playbooks/vicinae_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/vscode_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/zed_playbook.yml # noqa name[play]
+
+- name: Import Flatpak applications playbook
+  ansible.builtin.import_playbook: playbooks/flatpak-apps_playbook.yml
+
+# Waiting for stable version # Dakota comes with 'Compass' fork of Vicinae
+# playbook moved to bak folder
+# - name: Import Vicinae playbook
+#   ansible.builtin.import_playbook: playbooks/vicinae_playbook.yml
+
+- name: Import VS Code playbook
+  ansible.builtin.import_playbook: playbooks/vscode_playbook.yml
+
+- name: Import Zed playbook
+  ansible.builtin.import_playbook: playbooks/zed_playbook.yml
 
 # - config
-- ansible.builtin.import_playbook: playbooks/vscode-extensions-config_playbook.yml # noqa name[play]
-# waiting for stable version # - ansible.builtin.import_playbook: playbooks/vicinae-config_playbook.yml # noqa name[play]
-- ansible.builtin.import_playbook: playbooks/dolphin-config_playbook.yml # noqa name[play]
 
-# ### Gnome
+- name: Import VS Code extensions configuration playbook
+  ansible.builtin.import_playbook: playbooks/vscode-extensions-config_playbook.yml
+
+# Waiting for stable version # Dakota comes with 'Compass' fork of Vicinae
+# playbook moved to bak folder
+# - name: Import Vicinae configuration playbook
+#   ansible.builtin.import_playbook: playbooks/vicinae-config_playbook.yml
+
+- name: Import Dolphin configuration playbook
+  ansible.builtin.import_playbook: playbooks/dolphin-config_playbook.yml
+
+# ### GNOME ----------
 # - install
-- ansible.builtin.import_playbook: playbooks/gnome-papirus-icon-theme_playbook.yml # noqa name[play]
+
+- name: Import GNOME Papirus icon theme playbook
+  ansible.builtin.import_playbook: playbooks/gnome-papirus-icon-theme_playbook.yml
   when:
     - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
 
 # - config
-- ansible.builtin.import_playbook: playbooks/gnome-config_playbook.yml # noqa name[play]
-  when:
-    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
-- ansible.builtin.import_playbook: playbooks/gnome-ptyxis-config_playbook.yml # noqa name[play]
+
+- name: Import GNOME configuration playbook
+  ansible.builtin.import_playbook: playbooks/gnome-config_playbook.yml
   when:
     - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
 
-# ### USER
-# playbook called seperately in start.sh (since uses vault):
-# - ansible.builtin.import_playbook: playbooks/user_playbook.yml # noqa name[play]
+- name: Import GNOME Ptyxis configuration playbook
+  ansible.builtin.import_playbook: playbooks/gnome-ptyxis-config_playbook.yml
+  when:
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
+
+# ### USER ----------
+# Playbook called separately in start.sh (since it uses Vault):
+#
+# - name: Import user configuration playbook
+#   ansible.builtin.import_playbook: playbooks/user_playbook.yml
