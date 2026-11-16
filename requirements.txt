@@ -55,8 +55,13 @@ docutils # required for reStructuredText support
 # tree-sitter-yaml
 yamllint
 
-# ### ------------------------
-# ### SSH Click Config manager
+# ### ----------------------
+# ### Tools
+
+# SSH Click Config manager
 # - https://github.com/karlot/sshclick#installation-procedure
 sshclick
 
+# gputaskman
+# - https://github.com/shanselman/gputaskman
+gputaskman
