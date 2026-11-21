@@ -4,6 +4,8 @@
   hosts: localhost
   connection: local
   tasks:
+    # to have a fresh and cleaned up .zshrc:
+    #
     # - name: Zsh config - check status .zshrc (env_user)
     #   tags: shellrc
     #   ansible.builtin.stat:
@@ -51,12 +53,19 @@
         state: touch
         modification_time: preserve
 
-    # including backup of .zshrc
+    # disadvantage: also creates a backup if nothing changed # Alternative: everything in ONE blockinfile task
+    - name: Zsh config - backup existing .zshrc (env_user)
+      ansible.builtin.copy:
+        src: "{{ ansible_env.HOME }}/.zshrc"
+        dest: "{{ ansible_env.HOME }}/.zshrc.{{ ansible_date_time.iso8601_basic_short }}.bak"
+        remote_src: true
+        mode: preserve
+
     - name: Zsh config - Insert/Update additional paths and config - homebrew (env_user)
       tags: shellrc
       ansible.builtin.blockinfile:
         path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
-        backup: true
+        backup: false
         marker: "### {mark} 'homebrew' ANSIBLE MANAGED BLOCK ###"
         block: |
           # -----------------------------------------------
@@ -596,10 +605,10 @@
             eval "$(atuin init zsh)"
           fi
 
-    # ### -----------
-    # ### zsh profile
-    # ### -----------
-    - name: Zsh profile config - source .zshrc (env_user)
+    # ### ------------------
+    # ### zsh profile - user
+    # ### ------------------
+    - name: Zsh profile config - Insert/Update additional paths and config - user-bin (env_user)
       tags: shellrc
       ansible.builtin.blockinfile:
         path: "{{ ansible_facts['env']['HOME'] }}/.zprofile"
@@ -608,12 +617,11 @@
         owner: "{{ ansible_facts['env']['USER'] }}"
         group: "{{ ansible_facts['env']['USER'] }}"
         mode: u=rw,g=r,o=r
-        marker: "### {mark} 'source .zshrc' ANSIBLE MANAGED BLOCK ###"
+        marker: "### {mark} 'add path home-local-bin' ANSIBLE MANAGED BLOCK ###"
         block: |
-          # -------------
-          # source .zshrc
-          # -------------
-          # Get the aliases and functions ...
-          if [ -f ~/.zshrc ]; then
-            . ~/.zshrc
+          # -------------------------------------------
+          # Benutzer-bin Verzeichnis an PATH anhaengen:
+          # -------------------------------------------
+          if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+            export PATH="$HOME/.local/bin:$PATH"
           fi
