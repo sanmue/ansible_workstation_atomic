@@ -70,22 +70,35 @@
             export PATH="${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin"
           fi
 
-    - name: Zsh config - activate escape sequence to set tab title in terminal (env_user)
-      tags: shellrc
-      ansible.builtin.blockinfile:
-        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
-        backup: false
-        marker: "### {mark} 'escape sequence - tab title in terminal' ANSIBLE MANAGED BLOCK ###"
-        block: |
-          # -----------------------------------------------------
-          # activate escape sequence to set tab title in terminal
-          # -----------------------------------------------------
-          # Tab title: user@hostname:path (like Bash):
-          function set_title() {
-            print -nP "\033]0;%n@%m:%~\033\\"
-          }
-          # Update title with every prompt:
-          precmd() { set_title }
+    # undo commenting out if i do not like dostro(s) handling of it
+    #
+    # - name: Zsh config - activate escape sequence to set tab title in terminal (env_user)
+    #   tags: shellrc
+    #   ansible.builtin.blockinfile:
+    #     path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+    #     backup: false
+    #     marker: "### {mark} 'escape sequence - tab title in terminal' ANSIBLE MANAGED BLOCK ###"
+    #     block: |
+    #       # -----------------------------------------------------
+    #       # Terminal title fallback
+    #       # activate escape sequence to set tab title in terminal
+    #       # Let distro VTE integration handle it when available
+    #       # -----------------------------------------------------
+    #       # Tab title: user@hostname:path (like Bash):
+
+    #       # check if distro handles VTE integration:
+    #       if (( ${+functions[__vte_osc7]} == 0 )); then
+    #         function set_title() {
+    #           print -nP "\033]0;%n@%m:%~\033\\"
+    #         }
+
+    #         autoload -Uz add-zsh-hook
+
+    #         # Check if my hook is already registered:
+    #         if (( ${precmd_functions[(Ie)set_title]} == 0 )); then
+    #           add-zsh-hook precmd set_title
+    #         fi
+    #       fi
 
     - name: Zsh config - Insert/Update additional paths and config - starship shell prompt (env_user)
       tags: shellrc
