@@ -123,7 +123,7 @@
           alias lstle='lst --level'       # lstle = ls tree level              # Aufruf: lstle 3   (entspricht: ls --tree --level 3)
 
           # lsblk - list block devices
-          alias lsblku='lsblk -o NAME,MAJ:MIN,UUID,RM,SIZE,FSTYPE,RO,TYPE,MOUNTPOINTS' # u.a. mit UUID und FSTYPE
+          alias lsblku='lsblk -o NAME,MAJ:MIN,UUID,RM,SIZE,FSTYPE,RO,TYPE,MOUNTPOINTS --paths' # u.a. mit UUID und FSTYPE
           alias lsblkf='lsblk --fs --paths' # u.a. mit: filesystem info, UUID und full device paths
 
           # cat -> bat # concatenate files and print on the standard output
