@@ -46,11 +46,12 @@
           if command -v starship >/dev/null 2>&1; then
             eval "$(starship init bash)"
 
-            function set_win_title(){
-              echo -ne "\033]0; $USER@$HOSTNAME:$PWD \007"
-            }
+            # Commented out: Dakota's VTE integration already sets the terminal information and the title. I'll re-enable it if I don't like it.
+            # function set_win_title(){
+            #   echo -ne "\033]0; $USER@$HOSTNAME:$PWD \007"
+            # }
 
-            starship_precmd_user_func="set_win_title"
+            # starship_precmd_user_func="set_win_title"
           fi
 
     - name: Bash config - additional EXPORTS (env_user)
