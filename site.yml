@@ -1,6 +1,8 @@
 ---
 
-# ### Ansible ----------
+# ### -------
+# ### Ansible
+# ### -------
 
 - name: Import Ansible facts playbook
   ansible.builtin.import_playbook: playbooks/ansible-facts_playbook.yml
@@ -8,7 +10,10 @@
 - name: Import Ansible Galaxy collection playbook
   ansible.builtin.import_playbook: playbooks/ansible-galaxy-collection_playbook.yml
 
-# ### CLI tools ----------
+# ### ---------
+# ### CLI tools
+# ### ---------
+
 # - install
 
 - name: Import CLI packages playbook
@@ -62,13 +67,19 @@
 - name: Import Zsh configuration playbook
   ansible.builtin.import_playbook: playbooks/zsh-config_playbook.yml
 
-# ### Fonts ----------
+# ### -----
+# ### Fonts
+# ### ------
+
 # - install
 
 - name: Import fonts playbook
   ansible.builtin.import_playbook: playbooks/fonts_playbook.yml
 
-# ### GUI apps ----------
+# ### --------
+# ### GUI apps
+# ### --------
+
 # - preliminary config
 
 - name: Import Flatpak remote configuration playbook
@@ -103,7 +114,10 @@
 - name: Import Dolphin configuration playbook
   ansible.builtin.import_playbook: playbooks/dolphin-config_playbook.yml
 
-# ### GNOME ----------
+# ### -----
+# ### GNOME
+# ### -----
+
 # - install
 
 - name: Import GNOME Papirus icon theme playbook
@@ -124,7 +138,10 @@
     - ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "GNOME"
     - os_id != "bluefin-dakota" # Dakota uses ghostty
 
-# ### USER ----------
+# ### ----
+# ### USER
+# ### ----
+
 # Playbook called separately in start.sh (since it uses Vault):
 #
 # - name: Import user configuration playbook
