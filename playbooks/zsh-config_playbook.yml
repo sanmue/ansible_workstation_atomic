@@ -3,6 +3,8 @@
 - name: Zsh config
   hosts: localhost
   connection: local
+  vars:
+    shellrc_backup_retention_number: 10
   tasks:
     # to have a fresh and cleaned up .zshrc:
     #
@@ -60,6 +62,24 @@
         dest: "{{ ansible_env.HOME }}/.zshrc.{{ ansible_date_time.iso8601_basic_short }}.bak"
         remote_src: true
         mode: preserve
+
+    - name: Zsh config - find .zshrc backup files (env_user)
+      ansible.builtin.find:
+        paths: "{{ ansible_env.HOME }}"
+        patterns: ".zshrc.*.bak"
+        file_type: file
+      register: zshrc_backups
+
+    - name: Zsh config - remove old .zshrc backup files (env_user)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: >-
+        {{
+          (zshrc_backups.files | sort(attribute='mtime', reverse=true))[shellrc_backup_retention_number:]
+        }}
+      loop_control:
+        label: "{{ item.path }}"
 
     - name: Zsh config - Insert/Update additional paths and config - homebrew (env_user)
       tags: shellrc

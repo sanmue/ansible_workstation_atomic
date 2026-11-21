@@ -3,6 +3,8 @@
 - name: Bash config
   hosts: localhost
   connection: local
+  vars:
+    shellrc_backup_retention_number: 10
   tasks:
     - name: Bash config - create bashrc file (env_user)
       tags: shellrc
@@ -15,11 +17,37 @@
         modification_time: preserve
         access_time: preserve
 
+    # disadvantage: also creates a backup if nothing changed # Alternative: everything in ONE blockinfile task
+    - name: Bash config - backup existing .bashrc (env_user)
+      ansible.builtin.copy:
+        src: "{{ ansible_env.HOME }}/.bashrc"
+        dest: "{{ ansible_env.HOME }}/.bashrc.{{ ansible_date_time.iso8601_basic_short }}.bak"
+        remote_src: true
+        mode: preserve
+
+    - name: Bash config - find .bashrc backup files (env_user)
+      ansible.builtin.find:
+        paths: "{{ ansible_env.HOME }}"
+        patterns: ".bashrc.*.bak"
+        file_type: file
+      register: bashrc_backups
+
+    - name: Bash config - remove old .bashrc backup files (env_user)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: >-
+        {{
+          (bashrc_backups.files | sort(attribute='mtime', reverse=true))[shellrc_backup_retention_number:]
+        }}
+      loop_control:
+        label: "{{ item.path }}"
+
     - name: Bash config - Insert/Update additional paths and config - homebrew (env_user)
       tags: shellrc
       ansible.builtin.blockinfile:
         path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
-        backup: true
+        backup: false
         marker: "### {mark} 'homebrew' ANSIBLE MANAGED BLOCK ###"
         block: |
           # -----------------------------------------------
@@ -37,7 +65,7 @@
       tags: shellrc
       ansible.builtin.blockinfile:
         path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
-        backup: true
+        backup: false
         marker: "### {mark} 'starship shell prompt' ANSIBLE MANAGED BLOCK ###"
         block: |
           # -----------------------------------------------
@@ -58,7 +86,7 @@
       tags: shellrc
       ansible.builtin.blockinfile:
         path: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
-        backup: true
+        backup: false
         marker: "### {mark} 'additional EXPORTS' ANSIBLE MANAGED BLOCK ###"
         block: |
           # ------------------
