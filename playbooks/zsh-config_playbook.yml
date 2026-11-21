@@ -483,7 +483,7 @@
           # SSHClick - shell autocompletion
           # -------------------------------
           if command -v sshc >/dev/null 2>&1; then
-            eval "$(_SSHC_COMPLETE=bash_source sshc)"
+            eval "$(_SSHC_COMPLETE=zsh_source sshc)"
           fi
 
     - name: Zsh config - Insert/Update additional paths and config - nnn (env_user)
