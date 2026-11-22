@@ -12,16 +12,17 @@
 ### Variables
 ### ---
 python_version=$(python --version | cut -d' ' -f2)
-python_requirements="requirements.txt"
 ansible_requirements="requirements.yml"
 playbook="site.yml"
 playbook_vault_user="playbooks/user_playbook.yml"
 vault_password_file="${HOME}/.vault/ansibleVaultKey"
 os=$(grep -e "^NAME=" /etc/os-release | cut -d '"' -f 2 | xargs)
 # vaultpasswordfile="${HOME}/.vault/ansibleVaultKey" # 'vault_password_file' defined in 'ansible.cfg'
-PIP_INSTALL_FLAG="${HOME}/.ansible_python-pip-requirements_installed"
 STARTSCRIPT_REBOOT_FLAG="${HOME}/.ansible_startscript_reboot"
 PLAYBOOK_FINISHED_FLAG="${HOME}/.ansible_playbook_finished"
+
+# python_requirements="requirements.txt"
+# PIP_INSTALL_FLAG="${HOME}/.ansible_python-pip-requirements_installed"
 
 ### ---
 ### Init
