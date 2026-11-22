@@ -47,7 +47,6 @@
         database: group
         key: docker
         fail_key: false
-      register: docker_group
       changed_when: false
 
     - name: User - Check incus-admin group
@@ -55,7 +54,6 @@
         database: group
         key: incus-admin
         fail_key: false
-      register: incus_admin_group
       changed_when: false
 
     - name: User - Check libvirt group
@@ -63,7 +61,6 @@
         database: group
         key: libvirt
         fail_key: false
-      register: libvirt_group
       changed_when: false
 
     - name: User - Check clamav group
@@ -71,7 +68,6 @@
         database: group
         key: clamav
         fail_key: false
-      register: clamav_group
       changed_when: false
 
     # ### ADD to group(s)
@@ -84,8 +80,6 @@
         append: true
       when: ansible_facts.getent_group['docker'] is defined
       # when: ansible_facts.getent_group.docker is defined # wäre ok, aber siehe unten: 'incus-admin'
-      # when: "'docker' in docker_group.ansible_facts.getent_group"
-      # when: docker_group.ansible_facts.getent_group.docker is defined
 
     - name: User - Add R2D2 to incus-admin group
       become: true
