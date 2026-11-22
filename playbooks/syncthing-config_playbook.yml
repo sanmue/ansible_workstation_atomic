@@ -4,17 +4,21 @@
   hosts: localhost
   connection: local
   tasks:
-    # /home/linuxbrew/.linuxbrew/bin/syncthing
     - name: Syncthing - config - check if syncthing is available
-      ansible.builtin.command: command -v syncthing
+      ansible.builtin.command:
+        argv:
+          - which
+          - syncthing
+          # using which (or alternative: shell: cmd: command -v syncthing), since i want the path too
+          # only check: command: syncthing --version better
       register: syncthing_available
-      ignore_errors: true
       changed_when: false
+      failed_when: false
 
     - name: Syncthing - config - fail if syncthing is not available
       when: syncthing_available.rc != 0
       ansible.builtin.fail:
-        msg: "Syncthing is not installed or not in PATH. Please install it via Homebrew first. Or try opening a new shell session and start again."
+        msg: "Syncthing is not installed or not in PATH. Please install it first. Perhaps opening a new shell session and start again may help."
 
     - name: Syncthing - config - set syncthing path
       when: syncthing_available.rc == 0
