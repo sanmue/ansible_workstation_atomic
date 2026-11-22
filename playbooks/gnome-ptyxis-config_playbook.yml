@@ -104,16 +104,37 @@
     # ### -------------
     # ### Profile "zsh"
     # ### -------------
-    - name: Gnome - ptyxis - config - test if zsh is available
-      ansible.builtin.shell: which zsh >/dev/null 2>&1
-      register: zsh_available
-      ignore_errors: true
+
+    # Dakota: uses ghostty
+
+    - name: Gnome - ptyxis - config - check Homebrew zsh
+      ansible.builtin.stat:
+        path: /home/linuxbrew/.linuxbrew/bin/zsh
+      register: homebrew_zsh
+
+    - name: Gnome - ptyxis - config - determine system zsh
+      when: not homebrew_zsh.stat.exists
+      ansible.builtin.command:
+        cmd: sh -c 'command -v zsh'
+      register: system_zsh
       changed_when: false
+      failed_when: false
+
+    - name: Gnome - ptyxis - config - Zsh set executable path
+      when:
+        - homebrew_zsh.stat.exists or
+          (system_zsh.rc | default(1)) == 0
+          # Wenn system_zsh wegen vorhandener Homebrew-Zsh übersprungen wurde, ist ein fehlendes rc damit kein Problem.
+      ansible.builtin.set_fact:
+        zsh_executable: >-
+          {{
+            '/home/linuxbrew/.linuxbrew/bin/zsh'
+            if homebrew_zsh.stat.exists
+            else system_zsh.stdout
+          }}
 
     - name: Gnome - ptyxis - config - zsh-related settings
-      # only execute the following block when:
-      when:
-        - zsh_available.rc == 0
+      when: zsh_executable is defined
       block:
         - name: Gnome - ptyxis - config - add new profile zsh (predefined value)
           community.general.dconf:
@@ -136,7 +157,7 @@
         - name: Gnome - ptyxis - config - set custom command for profile zsh
           community.general.dconf:
             key: "/org/gnome/Ptyxis/Profiles/bcb6a342eea387b804bfee3869e22157/custom-command"
-            value: "'/bin/zsh'"
+            value: "'{{ zsh_executable }}'"
             state: present
 
         - name: Gnome - ptyxis - config - set using login shell for profile zsh
