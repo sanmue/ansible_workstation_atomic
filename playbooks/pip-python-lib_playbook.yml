@@ -11,5 +11,5 @@
       tags: pipuv
       ansible.builtin.pip:
         extra_args: --user
-        requirements: ../requirements.txt
+        requirements: "{{ playbook_dir }}/../requirements.txt"
         state: forcereinstall
