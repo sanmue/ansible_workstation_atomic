@@ -46,35 +46,33 @@
       ansible.builtin.getent:
         database: group
         key: docker
+        fail_key: false
       register: docker_group
       changed_when: false
-      failed_when: false  # Task wird nie als fehlgeschlagen markiert (bleibt "grün")
-                          # echter Return-Code (z.B. 127 für "command not found", oder 1, ...) wird in "docker_check" gespeichert
-      # ignore_errors: true # damit wäre die Ausgabe "rot", würde aber (einfach/ebenfalls) weiterlaufen
 
     - name: User - Check incus-admin group
       ansible.builtin.getent:
         database: group
         key: incus-admin
+        fail_key: false
       register: incus_admin_group
       changed_when: false
-      failed_when: false
 
     - name: User - Check libvirt group
       ansible.builtin.getent:
         database: group
         key: libvirt
+        fail_key: false
       register: libvirt_group
       changed_when: false
-      failed_when: false
 
     - name: User - Check clamav group
       ansible.builtin.getent:
         database: group
         key: clamav
+        fail_key: false
       register: clamav_group
       changed_when: false
-      failed_when: false
 
     # ### ADD to group(s)
 
@@ -84,7 +82,9 @@
         name: "R2D2"
         groups: docker
         append: true
-      when: "'docker' in docker_group.ansible_facts.getent_group"
+      when: ansible_facts.getent_group['docker'] is defined
+      # when: ansible_facts.getent_group.docker is defined # wäre ok, aber siehe unten: 'incus-admin'
+      # when: "'docker' in docker_group.ansible_facts.getent_group"
       # when: docker_group.ansible_facts.getent_group.docker is defined
 
     - name: User - Add R2D2 to incus-admin group
@@ -93,7 +93,9 @@
         name: "R2D2"
         groups: incus-admin
         append: true
-      when: "'incus-admin' in incus_admin_group.ansible_facts.getent_group"
+      when: ansible_facts.getent_group['incus-admin'] is defined
+      # when: ansible_facts.getent_group.incus-admin is defined # In Jinja wird der Bindestrich als Minus-Operator interpretiert
+      # wird sinngemäß interpretiert als: `ansible_facts.getent_group.incus - admin is defined`
 
     - name: User - Add R2D2 to libvirt group
       become: true
@@ -101,7 +103,7 @@
         name: "R2D2"
         groups: libvirt
         append: true
-      when: "'libvirt' in libvirt_group.ansible_facts.getent_group"
+      when: ansible_facts.getent_group['libvirt'] is defined
 
     - name: User - Add R2D2 to clamav group
       become: true
@@ -109,4 +111,4 @@
         name: "R2D2"
         groups: clamav
         append: true
-      when: "'clamav' in clamav_group.ansible_facts.getent_group"
+      when: ansible_facts.getent_group['clamav'] is defined
