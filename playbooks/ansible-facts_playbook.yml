@@ -4,6 +4,11 @@
   hosts: localhost
   connection: local
   tasks:
+
+  # ### -----------------
+  # ### Operating system
+  # ### -----------------
+
     - name: Ansible facts - read etc os-release - ID and VARIANT_ID
       ansible.builtin.shell: |
         . /etc/os-release
@@ -18,3 +23,18 @@
       ansible.builtin.set_fact:
         os_id: "{{ os_release.stdout_lines[0] }}"
         os_variant_id: "{{ os_release.stdout_lines[1] | default('') }}"
+
+    # ### ------------
+    # ### Applications
+    # ### ------------
+
+    - name: Ansible facts - check if Ptyxis is available
+      ansible.builtin.command:
+        cmd: sh -c 'command -v ptyxis'
+      register: ptyxis_check
+      changed_when: false
+      failed_when: false
+
+    - name: Ansible facts - set Ptyxis availability
+      ansible.builtin.set_fact:
+        ptyxis_available: "{{ ptyxis_check.rc == 0 }}"
