@@ -1,0 +1,15 @@
+---
+
+# "setuptools" bereits vorhandena aus start.sh: uv tool install ansible core --with ... ansible-navigator...
+#  'python -m pip show setuptools': Required-by: ansible-navigator, pbr
+
+- name: Pip Python lib
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Pip Python lib - install python libraries from requirements file
+      tags: pipuv
+      ansible.builtin.pip:
+        extra_args: --user
+        requirements: ../requirements.txt
+        state: forcereinstall

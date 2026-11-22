@@ -25,6 +25,12 @@
 - name: Import mise Python playbook
   ansible.builtin.import_playbook: playbooks/mise-python_playbook.yml
 
+- name: Import uv Python playbook
+  ansible.builtin.import_playbook: playbooks/uv-python-tool_playbook.yml
+
+- name: Import pip Python playbook
+  ansible.builtin.import_playbook: playbooks/pip-python-lib_playbook.yml
+
 # Must run after mise-node_playbook.yml
 - name: Import Node.js npm playbook
   ansible.builtin.import_playbook: playbooks/node-npm_playbook.yml

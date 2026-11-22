@@ -39,5 +39,5 @@ Aliases in `.bashrc` + `.zshrc`
 - `upnnnplugs`: create / update 'nnn' plugins + xterm conf for nnn-peview-tui
 - `upshellrc`: create / update shell conf (e.g. .bashrc, .zshrc)
 - `upvic`: extensions update + conf for vicinae desktop launcher
-  - vicinae currently not installed, alias `upvic` not available
+  > :warning: vicinae currently not installed, alias `upvic` not available
 - `upvimrc`: create / update vim conf + plugins

@@ -28,6 +28,15 @@ PLAYBOOK_FINISHED_FLAG="${HOME}/.ansible_playbook_finished"
 ### ---
 echo -e "\n\e[0;35mInitial steps\e[0m"
 
+# $HOME/.local/bin
+if [[ ! -d "$HOME/.local/bin" ]]; then
+    mkdir -p "$HOME/.local/bin"
+fi
+# add '$HOME/.local/bin' to PATH if not already exists:
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
 echo -e "\nHomebrew"
 if [[ -d /var/home/linuxbrew/.linuxbrew ]]; then
     echo "Homebrew already installed"
@@ -53,15 +62,35 @@ else
     mise use --global python@"${python_version}" # use same python version as the system python version - user-wide (--global)
 fi
 
-echo -e "\nPython - install requirements - python packages via pip (user)"
-if [[ -f "$PIP_INSTALL_FLAG" ]]; then
-    echo "- Installation of required python packages via pip (user) already done"
+echo -e "\nuv"
+if command -v uv; then
+    echo "uv already installed"
 else
-    eval "$(mise activate bash)"
-    if pip install --user -r "${python_requirements}"; then
-        touch "$PIP_INSTALL_FLAG"
-    fi
+    brew install uv
 fi
+
+echo -e "\nansible (uv tool)"
+# jmespath + psutil added to make sure they are available in the same isolated python environment
+# - jmespath + psutil: required by community.general.dconf
+# - jmespath # community.general.json_query: to be able to run json_query filter
+uv tool install \
+    --with-executables-from ansible-lint,ansible-navigator,ansible-creator \
+    --with jmespath \
+    --with psutil \
+    ansible-core
+    # --with packaging # ansible pipx module not used, which would need 'packaging'
+
+# commented out completely, since nothing left needed at this point
+# # since requirements file is now quite small, just install all containing python libraries now:
+# echo -e "\nPython - install requirements - python packages via pip (user)"
+# if [[ -f "$PIP_INSTALL_FLAG" ]]; then
+#     echo "- Installation of required python packages via pip (user) already done"
+# else
+#     eval "$(mise activate bash)"
+#     if python -m pip install --user -r "${python_requirements}"; then
+#         touch "$PIP_INSTALL_FLAG"
+#     fi
+# fi
 
 echo -e "\nAnsible - install requirements - collections"
 ansible-galaxy collection install -r "${ansible_requirements}"
@@ -74,12 +103,12 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
         sudo rpm-ostree install gcc # because homebrew is complaining
     fi
 
-    # will be installed via homerew in ansible playbook:
+    # will be installed via homebrew in ansible playbook:
     # if ! command -v distrobox >/dev/null 2>&1; then
     #     echo "- installing distrobox"
     #     sudo rpm-ostree install distrobox # alternative to toolbx
     # fi
-    # will be installed via homerew in ansible playbook:
+    # will be installed via homebrew in ansible playbook:
     # if ! command -v tmux >/dev/null 2>&1; then
     #     echo "- installing tmux"
     #     sudo rpm-ostree install tmux
@@ -90,7 +119,7 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
         sudo rpm-ostree install vim
     fi
 
-    # will be installed via homerew in ansible playbook:
+    # will be installed via homebrew in ansible playbook:
     # if ! command -v zsh >/dev/null 2>&1; then
     #     echo "- installing zsh"
     #     sudo rpm-ostree install zsh
@@ -104,7 +133,7 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
         # cockpit-machines cockpit-networkmanager cockpit-ostree cockpit-podman cockpit-selinux cockpit-storaged cockpit-system
     fi
 
-    # will be installed via homerew in ansible playbook:
+    # will be installed via homebrew in ansible playbook:
     # # Visual Studio Code # because of restrictions when installing as flatpak app
     # if ! command -v code >/dev/null 2>&1; then
     #     echo "- installing Visual Studio Code"

@@ -1,0 +1,43 @@
+---
+
+- name: Uv Python tool
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  # ansible-core + ansible-lint,ansible-navigator,ansible-creator + dependencies (jmespath,psutil) installed in start.sh
+
+  vars:
+    uv_python_tools:
+      - gputaskman
+      - jupyter
+      - sshclick
+      - cst-lsp
+      - docutils
+      - pip3-autoremove
+      - "python-lsp-server[all]"
+      - ruff
+      - yamllint
+
+  tasks:
+    - name: Uv Python tool - Check if uv is available
+      ansible.builtin.command:
+        cmd: uv --version
+      register: uv_check
+      changed_when: false
+      failed_when: false
+
+    - name: Uv Python tool - Fail when uv is not available
+      ansible.builtin.fail:
+        msg: >-
+          uv is not installed or not available in PATH.
+          Install uv before running the uv Python tools playbook.
+      when: uv_check.rc != 0
+
+    - name: Uv Python tool - install python tools
+      tags: pipuv
+      ansible.builtin.command:
+        cmd: "uv tool install {{ item }}"
+      loop: "{{ uv_python_tools }}"
+      register: uv_tool_install
+      changed_when: "'Installed' in uv_tool_install.stdout"
