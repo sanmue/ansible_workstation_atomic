@@ -2,31 +2,34 @@
 
 # set -x # enable debug mode
 
-### ---
+### --------------------
 ### Functions
-### ---
+### --------------------
 # shellcheck source=start.shlib
 # source start.shlib
 
-### ---
+### --------------------
 ### Variables
-### ---
+### --------------------
 python_version=$(python --version | cut -d' ' -f2)
 ansible_requirements="requirements.yml"
 playbook="site.yml"
 playbook_vault_user="playbooks/user_playbook.yml"
 vault_password_file="${HOME}/.vault/ansibleVaultKey"
-os=$(grep -e "^NAME=" /etc/os-release | cut -d '"' -f 2 | xargs)
-# vaultpasswordfile="${HOME}/.vault/ansibleVaultKey" # 'vault_password_file' defined in 'ansible.cfg'
+# shellcheck source=/etc/os-release
+. /etc/os-release
+# used: NAME (e.g. Bluefin), ID (e.g. bluefin-dakota), VARIANT_ID (e.g. utah; not set in dakota)
+# os=$(grep -e "^NAME=" /etc/os-release | cut -d '"' -f 2 | xargs)
 STARTSCRIPT_REBOOT_FLAG="${HOME}/.ansible_startscript_reboot"
 PLAYBOOK_FINISHED_FLAG="${HOME}/.ansible_playbook_finished"
 
+# vaultpasswordfile="${HOME}/.vault/ansibleVaultKey" # 'vault_password_file' defined in 'ansible.cfg'
 # python_requirements="requirements.txt"
 # PIP_INSTALL_FLAG="${HOME}/.ansible_python-pip-requirements_installed"
 
-### ---
+### --------------------
 ### Init
-### ---
+### --------------------
 echo -e "\n\e[0;35mInitial steps\e[0m"
 
 # $HOME/.local/bin
@@ -98,7 +101,7 @@ ansible-galaxy collection install -r "${ansible_requirements}"
 
 echo -e "\nAdditional Software (Layering)"
 # Bluefin: you can use `ujust devmode, ...` which installs: VS Code, distrobox, qemu/kvm + virtual machine manager, docker + podman, ...
-if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
+if command -v rpm-ostree && [[ "${NAME}" = "Fedora Linux" ]]; then
     if ! command -v gcc >/dev/null 2>&1; then
         echo "- installing gcc"
         sudo rpm-ostree install gcc # because homebrew is complaining
@@ -177,9 +180,9 @@ if command -v rpm-ostree && [[ "${os}" = "Fedora Linux" ]]; then
 fi
 
 
-### ----------------
+### --------------------
 ### Ansible Playbook
-### ----------------
+### --------------------
 echo -e "\n\e[0;35mAnsible Playbook\e[0m"
 
 executePlaybook="y"
@@ -214,6 +217,19 @@ if [[ "${executePlaybook}" = "y" ]]; then
 
     if [[ "${playbook_error}" -eq 0 ]]; then touch "${PLAYBOOK_FINISHED_FLAG}"; fi
     # (( playbook_error == 0 )) && touch "${PLAYBOOK_FINISHED_FLAG}"
+fi
+
+### --------------------
+### ujust (univesalblue variants)
+### --------------------
+
+# ### Virtualization
+if [[ "${ID}" = "bluefin-dakota" ]]; then
+    ujust setup-virtualization
+fi
+
+if [[ "${VARIANT_ID}" = "utah" ]]; then
+    ujust setup-vms
 fi
 
 echo -e "\n\e[0;33mScript finished.\e[0m"
