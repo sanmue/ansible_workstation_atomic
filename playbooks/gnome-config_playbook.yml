@@ -139,7 +139,7 @@
           - org.gnome.Ptyxis.desktop
           - nemo.desktop
           - org.gnome.Nautilus.desktop
-          - org.kde.dolphin.desktop
+          # - org.kde.dolphin.desktop
           - org.gnome.TextEditor.desktop
           - net.cozic.joplin_desktop.desktop
           - com.visualstudio.code.desktop
@@ -150,9 +150,11 @@
           - com.ranfdev.DistroShelf.desktop
           - io.podman_desktop.PodmanDesktop.desktop
           - virt-manager.desktop
+          - org.virt_manager.virt-manager.desktop
           - org.signal.Signal.desktop
           - org.gnome.Rhythmbox3.desktop
           - de.haeckerfelix.Shortwave.desktop
+          - io.github.amit9838.mousam.desktop
 
     # htop: uses F10 (and q) for Exit
     - name: Gnome config - dconf - keyboard shortcut - disable toggle maximize state (F10)
