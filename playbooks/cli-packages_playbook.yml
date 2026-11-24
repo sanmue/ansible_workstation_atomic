@@ -71,9 +71,11 @@
           # - bash-color-prompt   # already integrated
           - borgbackup    # Deduplicating backup program with compression and authenticated encryption
           - clamav        # Anti-virus toolkit for Unix
+          # - helix         # Post-modern modal text editor # alternative to vim
           - hugo          # static site generator
           - inxi          # full featured system information script
-          - micro         # modern and intuitive terminal-based text editor # Alternative flatpak: io.github.zyedidia.micro
+          - lima          # Linux Machines - Linux virtual machines with automatic file sharing and port forwarding (similar to WSL2)
+          # - micro         # modern and intuitive terminal-based text editor # flatpak: io.github.zyedidia.micro # alternative to nano
           - nnn           # terminal file manager
           - nload         # Monitors network traffic and bandwidth usage
           - pass          # the standard unix password manager
