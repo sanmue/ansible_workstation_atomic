@@ -22,6 +22,7 @@
           - fd            # Simple, fast and user-friendly alternative to find
           - gh            # GitHub command-line tool
           - glab          # Open-source GitLab command-line tool
+          - incus         # modern, secure and powerful system container and virtual machine manager
           - podman-tui    # Podman Terminal User Interface
           - ripgrep       # Search tool like grep and The Silver Searcher
           - tealdeer      # A fast tldr client in Rust
