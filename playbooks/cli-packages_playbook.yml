@@ -75,6 +75,7 @@
           - hugo          # static site generator
           - inxi          # full featured system information script
           - lima          # Linux Machines - Linux virtual machines with automatic file sharing and port forwarding (similar to WSL2)
+          - lima-additional-guestagents    # Additional guest agents for Lima # guest agents for non-native architectures
           # - micro         # modern and intuitive terminal-based text editor # flatpak: io.github.zyedidia.micro # alternative to nano
           - nnn           # terminal file manager
           - nload         # Monitors network traffic and bandwidth usage
