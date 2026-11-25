@@ -42,4 +42,4 @@ else
     echo "- Parameter passed to the script: '${tag}'"
 fi
 
-ansible-playbook "${repo_path}/${PLAYBOOK}" -v -K --tags "${tag}"
+ansible-playbook "${repo_path}/${PLAYBOOK}" -vv -K --tags "${tag}"
