@@ -37,7 +37,8 @@ Intall additional software and configure the system (Fedora Silverblue, Bluefin 
 Aliases in `.bashrc` + `.zshrc`
 
 - `upnnnplugs`: create / update 'nnn' plugins + xterm conf for nnn-peview-tui
-- `upshellrc`: create / update shell conf (e.g. .bashrc, .zshrc)
+- `uppipuv`: update / install python libs defined in requirements.txt and update / install python tools (via uv tool)
+- `upshellrc`: create / update shell conf (e.g. .bashrc, .zshrc, uv config)
 - `upvic`: extensions update + conf for vicinae desktop launcher
   > :warning: vicinae currently not installed, alias `upvic` not available
 - `upvimrc`: create / update vim conf + plugins

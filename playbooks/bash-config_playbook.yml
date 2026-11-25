@@ -202,6 +202,8 @@
             alias piprup='find $HOME -path "$HOME/*ansible_workstation_atomic/*" -type f \
               -name "requirements.txt" -exec pip install --upgrade --force-reinstall --user -r {} \;'
           fi
+        state: absent
+        # replaced by tag uppipuv
 
     - name: Bash config - custom alias definitions - direnv for uv init (env_user)
       tags: shellrc
@@ -233,12 +235,18 @@
             if command -v nnn >/dev/null 2>&1; then
               alias upnnnplugs='${HOME}/.local/bin/ansible_update-by-tag.sh nnnplugs'
             fi
+
+            # - `pipuv`: update / install python libs defined in requirements.txt and update / install python tools (via uv tool)
+            alias uppipuv='${HOME}/.local/bin/ansible_update-by-tag.sh pipuv'
+
             # - `shellrc`: create / update shell conf (e.g. .bashrc, .zshrc)
             alias upshellrc='${HOME}/.local/bin/ansible_update-by-tag.sh shellrc'
+
             # - `vicinae` (desktop launcher): extensions update + conf
             if command -v vicinae >/dev/null 2>&1; then
               alias upvic='${HOME}/.local/bin/ansible_update-by-tag.sh upvic'
             fi
+
             # - `vimrc`: create / update vim conf + plugins
             if command -v vim >/dev/null 2>&1; then
               alias upvimrc='${HOME}/.local/bin/ansible_update-by-tag.sh vimrc'
