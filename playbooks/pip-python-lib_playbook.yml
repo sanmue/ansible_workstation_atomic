@@ -4,12 +4,14 @@
 #  'python -m pip show setuptools': Required-by: ansible-navigator, pbr
 
 - name: Pip Python lib
+  tags: pipuv
   hosts: localhost
   connection: local
   tasks:
     - name: Pip Python lib - install python libraries from requirements file
-      tags: pipuv
       ansible.builtin.pip:
         extra_args: --user
         requirements: "{{ playbook_dir }}/../requirements.txt"
-        state: forcereinstall
+        state: latest # noqa package-latest
+        # latest: since I also want to update when starting playbook with tag 'pipuv'
+        # idempotent only within a given period of time, but not fully reproducible

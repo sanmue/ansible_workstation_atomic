@@ -1,11 +1,13 @@
 ---
 
 - name: Uv Python tool
+  tags: pipuv
   hosts: localhost
   connection: local
   gather_facts: false
 
   vars:
+    # tools that do not need an "--with-executable-from" or "--with"
     uv_python_tools:
       - gputaskman
       - sshclick
@@ -17,29 +19,12 @@
       - yamllint
 
   tasks:
-    - name: Uv Python tool - Check if uv is available
-      tags: pipuv
-      ansible.builtin.command:
-        cmd: uv --version
-      register: uv_check
-      changed_when: false
-      failed_when: false
-
-    - name: Uv Python tool - Fail when uv is not available
-      tags: pipuv
-      ansible.builtin.fail:
-        msg: >-
-          uv is not installed or not available in PATH.
-          Install uv before running the uv Python tools playbook.
-      when: uv_check.rc != 0
-
     # ansible-core + ansible-lint,ansible-navigator,ansible-creator + dependencies (jmespath,psutil) installed in start.sh
     # Ansible is initially bootstrapped in start.sh because this playbook
     # requires ansible-playbook itself. The configuration is repeated here
     # to keep the uv tool environment in the desired state.
 
-    - name: Uv Python tool - install Python tools - Ansible
-      tags: pipuv
+    - name: Uv Python tool - install Python tools - Ansible core (with related tools and dependencies)
       ansible.builtin.command:
         cmd: >-
           uv tool install
@@ -50,8 +35,7 @@
       register: uv_tool_install_ansible
       changed_when: "'Installed' in uv_tool_install_ansible.stderr"
 
-    - name: Uv Python tool - install Python tools - Jupyter
-      tags: pipuv
+    - name: Uv Python tool - install Python tools - Jupyterlab (with related tools and dependencies)
       ansible.builtin.command:
         cmd: >-
           uv tool install
@@ -62,7 +46,6 @@
       changed_when: "'Installed' in uv_tool_install_jupyter.stderr"
 
     - name: Uv Python tool - install python tools - misc
-      tags: pipuv
       ansible.builtin.command:
         argv:
           - uv
@@ -73,3 +56,9 @@
       register: uv_tool_install
       changed_when: "'Installed' in uv_tool_install.stderr"
     # oder: cmd: "uv tool install {{ item }}"
+
+    - name: Uv Python tool - upgrade all
+      ansible.builtin.command:
+        cmd: uv tool upgrade --all
+      register: uv_tool_upgrade
+      changed_when: "'Modified' in uv_tool_upgrade.stderr"
