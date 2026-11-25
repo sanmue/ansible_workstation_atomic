@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ ! "$(ls "${HOME}/mnt/pCloud")" ]; then
+if [ ! -d "${HOME}/mnt/pCloud" ]; then
     echo -e "\e[1;33mPfad '${HOME}/mnt/pCloud' noch nicht vorhanden, wird erstellt...\e[0m"
     mkdir -pv "${HOME}/mnt/pCloud"
 fi
