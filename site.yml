@@ -6,6 +6,8 @@
 
 - name: Import Ansible facts playbook
   ansible.builtin.import_playbook: playbooks/ansible-facts_playbook.yml
+  tags: always
+  # always: e.g 'ptyxis_available' is set in ansible-facts_playbook.yml, which is needed wen starting with ''... --tags "${tag}"'
 
 - name: Import Ansible Galaxy collection playbook
   ansible.builtin.import_playbook: playbooks/ansible-galaxy-collection_playbook.yml
