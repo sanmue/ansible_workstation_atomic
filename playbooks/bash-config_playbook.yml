@@ -20,14 +20,14 @@
     # disadvantage: also creates a backup if nothing changed # Alternative: everything in ONE blockinfile task
     - name: Bash config - backup existing .bashrc (env_user)
       ansible.builtin.copy:
-        src: "{{ ansible_env.HOME }}/.bashrc"
-        dest: "{{ ansible_env.HOME }}/.bashrc.{{ ansible_date_time.iso8601_basic_short }}.bak"
+        src: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.bashrc.{{ ansible_facts['date_time']['iso8601_basic_short'] }}.bak"
         remote_src: true
         mode: preserve
 
     - name: Bash config - find .bashrc backup files (env_user)
       ansible.builtin.find:
-        paths: "{{ ansible_env.HOME }}"
+        paths: "{{ ansible_facts['env']['HOME'] }}"
         patterns: ".bashrc.*.bak"
         file_type: file
       register: bashrc_backups

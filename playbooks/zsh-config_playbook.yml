@@ -58,14 +58,14 @@
     # disadvantage: also creates a backup if nothing changed # Alternative: everything in ONE blockinfile task
     - name: Zsh config - backup existing .zshrc (env_user)
       ansible.builtin.copy:
-        src: "{{ ansible_env.HOME }}/.zshrc"
-        dest: "{{ ansible_env.HOME }}/.zshrc.{{ ansible_date_time.iso8601_basic_short }}.bak"
+        src: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.zshrc.{{ ansible_facts['date_time']['iso8601_basic_short'] }}.bak"
         remote_src: true
         mode: preserve
 
     - name: Zsh config - find .zshrc backup files (env_user)
       ansible.builtin.find:
-        paths: "{{ ansible_env.HOME }}"
+        paths: "{{ ansible_facts['env']['HOME'] }}"
         patterns: ".zshrc.*.bak"
         file_type: file
       register: zshrc_backups
